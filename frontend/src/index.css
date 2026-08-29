@@ -1,16 +1,19 @@
 @import "tailwindcss";
 
-@layer base {
-  body {
-    @apply bg-gray-50 text-gray-900;
-  }
+@theme {
+  --color-primary: #3730A3;
+  --color-secondary: #006591;
+  --color-surface: #faf8ff;
+  --color-surface-dim: #d2d9f4;
+  --color-surface-container: #eaedff;
+  --color-on-surface: #131b2e;
+  
+  --font-geist: 'Geist', monospace;
+  --font-inter: 'Inter', sans-serif;
 }
 
-@media print {
-  body {
-    background-color: white !important;
-  }
-  .no-print {
-    display: none !important;
-  }
+body {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-inter);
 }
