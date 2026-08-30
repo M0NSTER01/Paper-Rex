@@ -259,6 +259,44 @@ app.post('/api/extract-resume', authenticateToken, upload.single('resume'), asyn
     }
 });
 
+app.post('/api/evaluate-ats', authenticateToken, async (req, res) => {
+    const { data } = req.body;
+    if (!data) return res.status(400).json({ error: "Resume data is required" });
+
+    try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+        
+        const prompt = `Evaluate the following resume data for ATS (Applicant Tracking System) compatibility, impact, and overall quality. 
+Analyze the keywords, descriptions, and structure.
+Return ONLY a JSON object with this exact structure:
+{
+  "score": <number between 0 and 100>,
+  "feedback": "<A short 1-2 sentence feedback on how to improve>"
+}
+
+Resume Data:
+${JSON.stringify(data)}
+`;
+        
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text().trim();
+        
+        let jsonStr = responseText;
+        if (jsonStr.startsWith('```json')) {
+            jsonStr = jsonStr.replace(/^```json\n/, '').replace(/\n```$/, '');
+        } else if (jsonStr.startsWith('```')) {
+            jsonStr = jsonStr.replace(/^```\n/, '').replace(/\n```$/, '');
+        }
+
+        const parsedData = JSON.parse(jsonStr);
+        res.json(parsedData);
+    } catch (err) {
+        console.error("ATS Evaluation error:", err);
+        res.status(500).json({ error: "Error evaluating ATS score" });
+    }
+});
+
 const nodemailer = require('nodemailer');
 
 app.post('/api/contact', async (req, res) => {
