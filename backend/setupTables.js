@@ -5,7 +5,7 @@ async function setup() {
         const pool = mysql.createPool({
             host: "localhost",
             user: "root",
-            password: "YOUR_DB_PASSWORD",
+            password: "root",
             database: "secondlife_resume"
         });
 

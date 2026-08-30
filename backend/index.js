@@ -19,12 +19,17 @@ const server = createServer(app);
 
 const JWT_SECRET = "YOUR_JWT_SECRET";
 
+const fs = require('fs');
 // Initialize MySQL Database Connection Pool
 const pool = mysql2.createPool({
-    host: "localhost",
-    user: "root",
+    host: "mysql-3c2f6ed-singhchhaya881-0640.k.aivencloud.com",
+    port: 24331,
+    user: "avnadmin",
     password: "YOUR_DB_PASSWORD",
-    database: "secondlife_resume"
+    database: "secondlife_resume",
+    ssl: {
+        ca: fs.readFileSync(__dirname + '/ca.pem')
+    }
 }).promise();
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -201,8 +206,8 @@ app.post('/api/extract-resume', authenticateToken, upload.single('resume'), asyn
         const text = pdfData.text;
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-        const prompt = "Extract the following information from the resume text below and return it strictly as a JSON object matching this structure:\n{\n  \"intro\": { \"name\": \"\", \"title\": \"\", \"summary\": \"\" },\n  \"experience\": [ { \"id\": 1, \"role\": \"\", \"company\": \"\", \"years\": \"\", \"desc\": \"\" } ],\n  \"education\": [ { \"id\": 1, \"degree\": \"\", \"school\": \"\", \"years\": \"\", \"desc\": \"\" } ],\n  \"skills\": [ \"Skill 1\", \"Skill 2\" ],\n  \"projects\": [ { \"id\": 1, \"title\": \"\", \"desc\": \"\", \"tech\": [\"Tech 1\"] } ],\n  \"certifications\": [ { \"id\": 1, \"title\": \"\", \"issuer\": \"\", \"year\": \"\" } ],\n  \"contact\": { \"email\": \"\", \"linkedin\": \"\", \"github\": \"\" },\n  \"visible\": {\n    \"education\": true,\n    \"skills\": true,\n    \"experience\": true,\n    \"projects\": true,\n    \"certifications\": true\n  }\n}\n\nRules:\n- For the \"visible\" object, set the value to false ONLY IF the section is empty or missing in the resume. Otherwise, set it to true.\n- Extract as accurately as possible. If something is missing, leave it as an empty string or empty array.\n- DO NOT wrap the output in markdown code blocks like ```json. Return ONLY the raw JSON string.\n\nResume Text:\n" + text;
+        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
+        const prompt = "Extract the following information from the resume text below and return it strictly as a JSON object matching this structure:\n{\n  \"intro\": { \"name\": \"\", \"title\": \"\", \"summary\": \"\" },\n  \"experience\": [ { \"id\": 1, \"role\": \"\", \"company\": \"\", \"years\": \"\", \"desc\": \"\" } ],\n  \"education\": [ { \"id\": 1, \"degree\": \"\", \"school\": \"\", \"years\": \"\", \"desc\": \"\" } ],\n  \"skills\": [ \"Skill 1\", \"Skill 2\" ],\n  \"projects\": [ { \"id\": 1, \"title\": \"\", \"desc\": \"\", \"tech\": [\"Tech 1\"] } ],\n  \"certifications\": [ { \"id\": 1, \"title\": \"\", \"issuer\": \"\", \"year\": \"\" } ],\n  \"contact\": { \"email\": \"\", \"linkedin\": \"\", \"github\": \"\" },\n  \"visible\": {\n    \"education\": true,\n    \"skills\": true,\n    \"experience\": true,\n    \"projects\": true,\n    \"certifications\": true\n  }\n}\n\nRules:\n- For the \"visible\" object, set the value to false ONLY IF the section is empty or missing in the resume. Otherwise, set it to true.\n- Extract as accurately as possible. If something is missing, leave it as an empty string or empty array.\n- EXTREMELY IMPORTANT: Do NOT extract personal or academic projects into the \"experience\" array. The \"experience\" array is strictly for formal employment or work experience. Projects belong ONLY in the \"projects\" array.\n- DO NOT wrap the output in markdown code blocks like ```json. Return ONLY the raw JSON string.\n\nResume Text:\n" + text;
         
         const result = await model.generateContent(prompt);
         const responseText = result.response.text().trim();
@@ -232,10 +237,15 @@ The user will provide:
 2. Target Context: (Target Job Title, Company Name, and raw Job Description)
 
 INSTRUCTIONS:
-1. Data Extraction & Mapping: Map the user's raw data to the required JSON schema. 
+1. Data Extraction & Mapping: Map the user's raw data to the required JSON schema. EXTREMELY IMPORTANT: DO NOT treat personal or academic projects as work experience. Work experience must ONLY be extracted from explicit "Experience" or "Employment" sections. Projects belong in the "projects" section ONLY.
 2. Job Tailoring: Rewrite the user's "Experience" and "Projects" descriptions to heavily align with the Target Context. Use the STAR method (Situation, Task, Action, Result). Quantify achievements where possible. 
 3. Keyword Injection: Naturally weave in relevant keywords from the Job Description into the summary, skills, and experience sections. DO NOT lie or invent experience they do not have.
-4. ATS Scoring: Calculate an ATS compatibility score (integer from 0 to 100) based on how well the user's tailored background matches the Target Context.
+4. ATS Scoring Logic: Calculate an ATS compatibility score (integer from 0 to 100) based on a strict deterministic logic, NOT random estimation. Use this rubric:
+   - Keyword Match (0-30 points): How many required skills from the job description are explicitly present?
+   - Experience Match (0-40 points): Does the duration and relevance of actual work experience (excluding projects) align with the target role? If no formal experience exists, max score here is 15/40 (from relevant projects).
+   - Education/Certifications (0-20 points): Does the candidate meet the educational requirements?
+   - Readability & Impact (0-10 points): Formatting, action verbs, and quantifiable metrics.
+   Sum these up for the final score.
 5. Feedback: Identify matching keywords, missing keywords (skills they need to add if they have them), and provide 2-3 brief, actionable suggestions to improve the resume match.
 
 OUTPUT FORMAT:
@@ -297,7 +307,7 @@ app.post('/api/optimize-resume', authenticateToken, async (req, res) => {
     try {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash-lite",
+            model: "gemini-3.1-flash-lite",
             systemInstruction: geminiSystemInstruction,
             generationConfig: {
                 responseMimeType: "application/json"
@@ -317,7 +327,15 @@ ${jobDescription}
 
         const result = await model.generateContent(userMessage);
         const responseText = result.response.text().trim();
-        const parsed = JSON.parse(responseText);
+        
+        let jsonStr = responseText;
+        if (jsonStr.startsWith('```json')) {
+            jsonStr = jsonStr.replace(/^```json\n/, '').replace(/\n```$/, '');
+        } else if (jsonStr.startsWith('```')) {
+            jsonStr = jsonStr.replace(/^```\n/, '').replace(/\n```$/, '');
+        }
+
+        const parsed = JSON.parse(jsonStr);
 
         const profile = parsed.optimized_profile || {};
         const intro = profile.professional_intro || {};

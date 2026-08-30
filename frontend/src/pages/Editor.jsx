@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { Save, ExternalLink, Settings, Briefcase, GraduationCap, User, Trophy, LayoutTemplate, Loader2, Monitor, Tablet, Smartphone, Code, Mail, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
+import { Save, ExternalLink, Settings, Briefcase, GraduationCap, User, Trophy, LayoutTemplate, Loader2, Monitor, Tablet, Smartphone, Code, Mail, Eye, EyeOff, Plus, Trash2, UploadCloud } from 'lucide-react';
 import MinimalistTemplate from '../components/templates/MinimalistTemplate';
 import ModernTemplate from '../components/templates/ModernTemplate';
 import DataDrivenTemplate from '../components/templates/DataDrivenTemplate';
@@ -17,6 +17,7 @@ const DEFAULT_DATA = {
   projects: [],
   certifications: [],
   contact: { email: '', linkedin: '', github: '' },
+  ats: { score: 0, feedback: '' },
   visible: {
     education: true,
     skills: true,
@@ -30,10 +31,11 @@ export default function Editor() {
   const [data, setData] = useState(DEFAULT_DATA);
   const [theme, setTheme] = useState('Minimalist');
   const [previewMode, setPreviewMode] = useState('desktop');
-  const [completeness, setCompleteness] = useState(0);
+  const [evaluatingAts, setEvaluatingAts] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+  const [saved, setSaved] = useState(false);
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const portfolioId = searchParams.get('id');
@@ -46,24 +48,23 @@ export default function Editor() {
     }
   }, [portfolioId]);
 
+  // Autosave logic
   useEffect(() => {
-    // Calculate completeness
-    let filled = 0;
-    let total = 7;
-    if (data.intro?.name) filled++;
-    if (data.experience?.length) filled++;
-    if (data.education?.length) filled++;
-    if (data.skills?.length) filled++;
-    if (data.projects?.length) filled++;
-    if (data.certifications?.length) filled++;
-    if (data.contact?.email) filled++;
-    setCompleteness(Math.round((filled / total) * 100));
-  }, [data]);
+    if (!portfolioId || loading || !data.intro?.name?.trim()) return;
+    const timeoutId = setTimeout(() => {
+      const token = localStorage.getItem('token');
+      axios.put(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`,
+        { theme, data },
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).catch(err => console.error('Autosave failed', err));
+    }, 1500);
+    return () => clearTimeout(timeoutId);
+  }, [data, theme, portfolioId, loading]);
 
   const fetchPortfolio = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`http://localhost:5000/api/portfolios/${id}`, {
+      const res = await axios.get(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.theme) setTheme(res.data.theme);
@@ -79,7 +80,7 @@ export default function Editor() {
     }
   };
 
-  
+
   const handlePhotoUpload = async (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
@@ -87,7 +88,7 @@ export default function Editor() {
     formData.append('photo', file);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('http://localhost:5000/api/upload-image', formData, {
+      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/upload-image', formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -104,14 +105,20 @@ export default function Editor() {
   };
 
   const handleSave = async () => {
-    if (!portfolioId) return;
+    if (!data.intro?.name?.trim() || !data.contact?.email?.trim() || !data.intro?.title?.trim()) {
+      alert("Mandatory Fields Missing:\nPlease ensure your Full Name, Professional Title, and Contact Email are filled in before saving.");
+      return false;
+    }
+    if (!portfolioId) return false;
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/portfolios/${portfolioId}`, 
+      await axios.put(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`,
         { theme, data },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     } catch (err) {
       console.error("Failed to save", err);
       alert("Failed to save changes");
@@ -134,9 +141,31 @@ export default function Editor() {
     }));
   };
 
+  const handleRecalculateATS = async () => {
+    if (!portfolioId) return;
+    setEvaluatingAts(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/evaluate-ats', { data }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setData(prev => ({
+        ...prev,
+        ats: { score: res.data.score, feedback: res.data.feedback }
+      }));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to calculate ATS score.');
+    } finally {
+      setEvaluatingAts(false);
+    }
+  };
+
   const handlePublish = () => {
-    handleSave().then(() => {
-      navigate(`/portfolio/${portfolioId || 'demo'}`);
+    handleSave().then((success) => {
+      if (success !== false) {
+        navigate(`/portfolio/${portfolioId || 'demo'}`);
+      }
     });
   };
 
@@ -162,11 +191,11 @@ export default function Editor() {
         <Icon className="w-5 h-5" /> <h3>{title}</h3>
       </div>
       {sectionKey && (
-        <button 
+        <button
           onClick={() => toggleVisibility(sectionKey)}
           className={`flex items-center gap-1 text-xs px-2 py-1 rounded border ${data.visible[sectionKey] ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}
         >
-          {data.visible[sectionKey] ? <><Eye className="w-3 h-3"/> Visible</> : <><EyeOff className="w-3 h-3"/> Hidden</>}
+          {data.visible[sectionKey] ? <><Eye className="w-3 h-3" /> Visible</> : <><EyeOff className="w-3 h-3" /> Hidden</>}
         </button>
       )}
     </div>
@@ -179,14 +208,22 @@ export default function Editor() {
         <div className="flex items-center gap-6">
           <h1 className="font-bold font-geist text-xl text-[var(--color-primary)]">Editor</h1>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500">Completeness</span>
+            <span className="text-sm text-gray-500 cursor-help" title={data.ats?.feedback || 'Click Recalculate to get ATS feedback'}>ATS Score</span>
             <div className="w-32 bg-gray-200 rounded-full h-2">
-              <div className="bg-green-500 h-2 rounded-full transition-all" style={{ width: `${completeness}%` }}></div>
+              <div className={`h-2 rounded-full transition-all ${data.ats?.score > 70 ? 'bg-green-500' : data.ats?.score > 40 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${data.ats?.score || 0}%` }}></div>
             </div>
-            <span className="text-sm font-semibold">{completeness}%</span>
+            <span className="text-sm font-semibold">{data.ats?.score || 0}%</span>
+            <button
+              onClick={handleRecalculateATS}
+              disabled={evaluatingAts}
+              className="text-xs bg-[var(--color-primary)] text-white px-2 py-1 rounded hover:bg-[var(--color-secondary)] transition disabled:opacity-50 flex items-center gap-1"
+            >
+              {evaluatingAts ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+              {evaluatingAts ? 'Evaluating...' : 'Recalculate'}
+            </button>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200 shadow-inner">
             <button onClick={() => setPreviewMode('desktop')} className={`p-1.5 rounded-md transition-all ${previewMode === 'desktop' ? 'bg-white shadow text-[var(--color-primary)]' : 'text-gray-500 hover:text-gray-900'}`} title="Desktop Preview"><Monitor className="w-4 h-4" /></button>
@@ -206,7 +243,7 @@ export default function Editor() {
             </select>
           </div>
           <button onClick={handleSave} className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-md font-semibold text-sm hover:bg-gray-200 transition shadow-sm border border-gray-200">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4" />} Save
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <span className="text-green-600 font-bold">✓</span> : <Save className="w-4 h-4" />} {saved ? "Saved!" : "Save"}
           </button>
           <button onClick={handlePublish} className="flex items-center gap-2 bg-[var(--color-primary)] text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-[var(--color-secondary)] transition shadow-sm">
             <ExternalLink className="w-4 h-4" /> Publish
@@ -216,11 +253,11 @@ export default function Editor() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        
+
         {/* Left Panel - Form */}
         <div className="w-[450px] flex-shrink-0 flex flex-col border-r border-[var(--color-surface-dim)] bg-white overflow-y-auto z-20 shadow-sm relative">
           <div className="p-6 space-y-10 w-full pb-32">
-            
+
             {/* Intro Section */}
             <section>
               <SectionHeader icon={User} title="Professional Intro" />
@@ -230,7 +267,7 @@ export default function Editor() {
                   {data.intro?.photoUrl ? (
                     <div className="relative group w-16 h-16 rounded-full overflow-hidden border border-gray-300">
                       <img src={data.intro.photoUrl} alt="Profile" className="w-full h-full object-cover" />
-                      <button onClick={() => setData({...data, intro: {...data.intro, photoUrl: ''}})} className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4"/></button>
+                      <button onClick={() => setData({ ...data, intro: { ...data.intro, photoUrl: '' } })} className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   ) : (
                     <label className="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] text-gray-400 transition">
@@ -244,16 +281,16 @@ export default function Editor() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Full Name</label>
-                  <input type="text" value={data.intro?.name || ''} onChange={(e) => setData({...data, intro: {...data.intro, name: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Full Name <span className="text-red-500">*</span></label>
+                  <input type="text" value={data.intro?.name || ''} onChange={(e) => setData({ ...data, intro: { ...data.intro, name: e.target.value } })} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Professional Title</label>
-                  <input type="text" value={data.intro?.title || ''} onChange={(e) => setData({...data, intro: {...data.intro, title: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Professional Title <span className="text-red-500">*</span></label>
+                  <input type="text" value={data.intro?.title || ''} onChange={(e) => setData({ ...data, intro: { ...data.intro, title: e.target.value } })} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Summary</label>
-                  <textarea rows="4" value={data.intro?.summary || ''} onChange={(e) => setData({...data, intro: {...data.intro, summary: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-none focus:border-[var(--color-primary)] outline-none"></textarea>
+                  <textarea rows="4" value={data.intro?.summary || ''} onChange={(e) => setData({ ...data, intro: { ...data.intro, summary: e.target.value } })} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-none focus:border-[var(--color-primary)] outline-none"></textarea>
                 </div>
               </div>
             </section>
@@ -267,16 +304,16 @@ export default function Editor() {
                     <button onClick={() => {
                       const newExp = [...data.experience];
                       newExp.splice(idx, 1);
-                      setData({...data, experience: newExp});
-                    }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4"/></button>
-                    <input placeholder="Role" value={exp.role || ''} onChange={(e) => { const arr = [...data.experience]; arr[idx].role = e.target.value; setData({...data, experience: arr}) }} className="font-semibold text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
-                    <input placeholder="Company" value={exp.company || ''} onChange={(e) => { const arr = [...data.experience]; arr[idx].company = e.target.value; setData({...data, experience: arr}) }} className="text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
-                    <input placeholder="Years (e.g. 2020 - Present)" value={exp.years || ''} onChange={(e) => { const arr = [...data.experience]; arr[idx].years = e.target.value; setData({...data, experience: arr}) }} className="text-xs text-gray-500 w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
-                    <textarea placeholder="Description" rows="2" value={exp.desc || ''} onChange={(e) => { const arr = [...data.experience]; arr[idx].desc = e.target.value; setData({...data, experience: arr}) }} className="text-sm w-full outline-none bg-transparent resize-none border-b border-dashed border-gray-300 focus:border-[var(--color-primary)]"></textarea>
+                      setData({ ...data, experience: newExp });
+                    }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4" /></button>
+                    <input placeholder="Role" value={exp.role || ''} onChange={(e) => { const arr = [...data.experience]; arr[idx].role = e.target.value; setData({ ...data, experience: arr }) }} className="font-semibold text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                    <input placeholder="Company" value={exp.company || ''} onChange={(e) => { const arr = [...data.experience]; arr[idx].company = e.target.value; setData({ ...data, experience: arr }) }} className="text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                    <input placeholder="Years (e.g. 2020 - Present)" value={exp.years || ''} onChange={(e) => { const arr = [...data.experience]; arr[idx].years = e.target.value; setData({ ...data, experience: arr }) }} className="text-xs text-gray-500 w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                    <textarea placeholder="Description" rows="2" value={exp.desc || ''} onChange={(e) => { const arr = [...data.experience]; arr[idx].desc = e.target.value; setData({ ...data, experience: arr }) }} className="text-sm w-full outline-none bg-transparent resize-none border-b border-dashed border-gray-300 focus:border-[var(--color-primary)]"></textarea>
                   </div>
                 ))}
-                <button onClick={() => setData({...data, experience: [...(data.experience||[]), {id: Date.now(), role:'', company:'', years:'', desc:''}]})} className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-md text-sm font-semibold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] flex justify-center items-center gap-1 transition">
-                  <Plus className="w-4 h-4"/> Add Experience
+                <button onClick={() => setData({ ...data, experience: [...(data.experience || []), { id: Date.now(), role: '', company: '', years: '', desc: '' }] })} className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-md text-sm font-semibold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] flex justify-center items-center gap-1 transition">
+                  <Plus className="w-4 h-4" /> Add Experience
                 </button>
               </div>
             </section>
@@ -290,15 +327,15 @@ export default function Editor() {
                     <button onClick={() => {
                       const arr = [...data.education];
                       arr.splice(idx, 1);
-                      setData({...data, education: arr});
-                    }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4"/></button>
-                    <input placeholder="Degree" value={edu.degree || ''} onChange={(e) => { const arr = [...data.education]; arr[idx].degree = e.target.value; setData({...data, education: arr}) }} className="font-semibold text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
-                    <input placeholder="School/University" value={edu.school || ''} onChange={(e) => { const arr = [...data.education]; arr[idx].school = e.target.value; setData({...data, education: arr}) }} className="text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
-                    <input placeholder="Years" value={edu.years || ''} onChange={(e) => { const arr = [...data.education]; arr[idx].years = e.target.value; setData({...data, education: arr}) }} className="text-xs text-gray-500 w-full outline-none bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                      setData({ ...data, education: arr });
+                    }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4" /></button>
+                    <input placeholder="Degree" value={edu.degree || ''} onChange={(e) => { const arr = [...data.education]; arr[idx].degree = e.target.value; setData({ ...data, education: arr }) }} className="font-semibold text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                    <input placeholder="School/University" value={edu.school || ''} onChange={(e) => { const arr = [...data.education]; arr[idx].school = e.target.value; setData({ ...data, education: arr }) }} className="text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                    <input placeholder="Years" value={edu.years || ''} onChange={(e) => { const arr = [...data.education]; arr[idx].years = e.target.value; setData({ ...data, education: arr }) }} className="text-xs text-gray-500 w-full outline-none bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
                   </div>
                 ))}
-                <button onClick={() => setData({...data, education: [...(data.education||[]), {id: Date.now(), degree:'', school:'', years:''}]})} className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-md text-sm font-semibold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] flex justify-center items-center gap-1 transition">
-                  <Plus className="w-4 h-4"/> Add Education
+                <button onClick={() => setData({ ...data, education: [...(data.education || []), { id: Date.now(), degree: '', school: '', years: '' }] })} className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-md text-sm font-semibold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] flex justify-center items-center gap-1 transition">
+                  <Plus className="w-4 h-4" /> Add Education
                 </button>
               </div>
             </section>
@@ -307,11 +344,11 @@ export default function Editor() {
             <section>
               <SectionHeader icon={Code} title="Skills" sectionKey="skills" />
               <div className="space-y-4">
-                <textarea 
-                  placeholder="Comma separated skills (e.g. React, Node.js, Python)" 
-                  rows="3" 
-                  value={(data.skills || []).join(', ')} 
-                  onChange={(e) => setData({...data, skills: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} 
+                <textarea
+                  placeholder="Comma separated skills (e.g. React, Node.js, Python)"
+                  rows="3"
+                  value={(data.skills || []).join(', ')}
+                  onChange={(e) => setData({ ...data, skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-none focus:border-[var(--color-primary)] outline-none"
                 ></textarea>
               </div>
@@ -326,15 +363,54 @@ export default function Editor() {
                     <button onClick={() => {
                       const arr = [...data.projects];
                       arr.splice(idx, 1);
-                      setData({...data, projects: arr});
-                    }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4"/></button>
-                    <input placeholder="Project Title" value={proj.title || ''} onChange={(e) => { const arr = [...data.projects]; arr[idx].title = e.target.value; setData({...data, projects: arr}) }} className="font-semibold text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
-                    <textarea placeholder="Description" rows="2" value={proj.desc || ''} onChange={(e) => { const arr = [...data.projects]; arr[idx].desc = e.target.value; setData({...data, projects: arr}) }} className="text-sm w-full outline-none mb-2 bg-transparent resize-none border-b border-dashed border-gray-300 focus:border-[var(--color-primary)]"></textarea>
-                    <input placeholder="Technologies (comma separated)" value={(proj.tech || []).join(', ')} onChange={(e) => { const arr = [...data.projects]; arr[idx].tech = e.target.value.split(',').map(s=>s.trim()); setData({...data, projects: arr}) }} className="text-xs text-gray-500 w-full outline-none bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                      setData({ ...data, projects: arr });
+                    }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition z-10 bg-white rounded-md"><Trash2 className="w-4 h-4" /></button>
+
+                    <div className="flex gap-4 mb-3">
+                      {proj.image ? (
+                        <div className="relative w-20 h-20 rounded-md overflow-hidden bg-gray-200 shrink-0 group/img">
+                          <img src={proj.image} alt="Project" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                            <button onClick={() => {
+                              const arr = [...data.projects];
+                              delete arr[idx].image;
+                              setData({ ...data, projects: arr });
+                            }} className="text-white hover:text-red-400 p-1"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="w-20 h-20 rounded-md border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors shrink-0">
+                          <UploadCloud className="w-5 h-5 mb-1" />
+                          <span className="text-[10px] font-semibold text-center leading-tight">Project<br />Image</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            if (!e.target.files || e.target.files.length === 0) return;
+                            const file = e.target.files[0];
+                            const formData = new FormData();
+                            formData.append('photo', file);
+                            try {
+                              const token = localStorage.getItem('token');
+                              const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/upload-image', formData, {
+                                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+                              });
+                              const arr = [...data.projects];
+                              arr[idx].image = res.data.photoUrl;
+                              setData({ ...data, projects: arr });
+                            } catch (err) {
+                              alert('Failed to upload project photo');
+                            }
+                          }} />
+                        </label>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <input placeholder="Project Title" value={proj.title || ''} onChange={(e) => { const arr = [...data.projects]; arr[idx].title = e.target.value; setData({ ...data, projects: arr }) }} className="font-semibold text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                        <textarea placeholder="Description" rows="2" value={proj.desc || ''} onChange={(e) => { const arr = [...data.projects]; arr[idx].desc = e.target.value; setData({ ...data, projects: arr }) }} className="text-sm w-full outline-none bg-transparent resize-none border-b border-dashed border-gray-300 focus:border-[var(--color-primary)]"></textarea>
+                      </div>
+                    </div>
+                    <input placeholder="Technologies (comma separated)" value={(proj.tech || []).join(', ')} onChange={(e) => { const arr = [...data.projects]; arr[idx].tech = e.target.value.split(',').map(s => s.trim()); setData({ ...data, projects: arr }) }} className="text-xs text-gray-500 w-full outline-none bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
                   </div>
                 ))}
-                <button onClick={() => setData({...data, projects: [...(data.projects||[]), {id: Date.now(), title:'', desc:'', tech:[]}]})} className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-md text-sm font-semibold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] flex justify-center items-center gap-1 transition">
-                  <Plus className="w-4 h-4"/> Add Project
+                <button onClick={() => setData({ ...data, projects: [...(data.projects || []), { id: Date.now(), title: '', desc: '', tech: [] }] })} className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-md text-sm font-semibold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] flex justify-center items-center gap-1 transition">
+                  <Plus className="w-4 h-4" /> Add Project
                 </button>
               </div>
             </section>
@@ -348,15 +424,15 @@ export default function Editor() {
                     <button onClick={() => {
                       const arr = [...data.certifications];
                       arr.splice(idx, 1);
-                      setData({...data, certifications: arr});
-                    }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4"/></button>
-                    <input placeholder="Certification Title" value={cert.title || ''} onChange={(e) => { const arr = [...data.certifications]; arr[idx].title = e.target.value; setData({...data, certifications: arr}) }} className="font-semibold text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
-                    <input placeholder="Issuer" value={cert.issuer || ''} onChange={(e) => { const arr = [...data.certifications]; arr[idx].issuer = e.target.value; setData({...data, certifications: arr}) }} className="text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
-                    <input placeholder="Year" value={cert.year || ''} onChange={(e) => { const arr = [...data.certifications]; arr[idx].year = e.target.value; setData({...data, certifications: arr}) }} className="text-xs text-gray-500 w-full outline-none bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                      setData({ ...data, certifications: arr });
+                    }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4" /></button>
+                    <input placeholder="Certification Title" value={cert.title || ''} onChange={(e) => { const arr = [...data.certifications]; arr[idx].title = e.target.value; setData({ ...data, certifications: arr }) }} className="font-semibold text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                    <input placeholder="Issuer" value={cert.issuer || ''} onChange={(e) => { const arr = [...data.certifications]; arr[idx].issuer = e.target.value; setData({ ...data, certifications: arr }) }} className="text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                    <input placeholder="Year" value={cert.year || ''} onChange={(e) => { const arr = [...data.certifications]; arr[idx].year = e.target.value; setData({ ...data, certifications: arr }) }} className="text-xs text-gray-500 w-full outline-none bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
                   </div>
                 ))}
-                <button onClick={() => setData({...data, certifications: [...(data.certifications||[]), {id: Date.now(), title:'', issuer:'', year:''}]})} className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-md text-sm font-semibold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] flex justify-center items-center gap-1 transition">
-                  <Plus className="w-4 h-4"/> Add Certification
+                <button onClick={() => setData({ ...data, certifications: [...(data.certifications || []), { id: Date.now(), title: '', issuer: '', year: '' }] })} className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-md text-sm font-semibold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] flex justify-center items-center gap-1 transition">
+                  <Plus className="w-4 h-4" /> Add Certification
                 </button>
               </div>
             </section>
@@ -366,16 +442,16 @@ export default function Editor() {
               <SectionHeader icon={Mail} title="Contact Info" />
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Email</label>
-                  <input type="email" value={data.contact?.email || ''} onChange={(e) => setData({...data, contact: {...data.contact, email: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Email <span className="text-red-500">*</span></label>
+                  <input type="email" value={data.contact?.email || ''} onChange={(e) => setData({ ...data, contact: { ...data.contact, email: e.target.value } })} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1">LinkedIn URL</label>
-                  <input type="text" value={data.contact?.linkedin || ''} onChange={(e) => setData({...data, contact: {...data.contact, linkedin: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
+                  <input type="text" value={data.contact?.linkedin || ''} onChange={(e) => setData({ ...data, contact: { ...data.contact, linkedin: e.target.value } })} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1">GitHub URL</label>
-                  <input type="text" value={data.contact?.github || ''} onChange={(e) => setData({...data, contact: {...data.contact, github: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
+                  <input type="text" value={data.contact?.github || ''} onChange={(e) => setData({ ...data, contact: { ...data.contact, github: e.target.value } })} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
                 </div>
               </div>
             </section>
@@ -386,7 +462,7 @@ export default function Editor() {
         {/* Right Panel - Live Preview */}
         <div className="flex-1 bg-gray-100 flex items-center justify-center p-4 overflow-hidden relative">
           <div className="w-full h-full flex justify-center overflow-auto items-start pt-4 pb-12">
-            <div 
+            <div
               className="bg-white shadow-2xl overflow-y-auto relative transition-all duration-300 ease-in-out border border-gray-200 flex flex-col"
               style={{
                 width: previewMode === 'desktop' ? '100%' : previewMode === 'tablet' ? '768px' : '375px',
