@@ -1,0 +1,225 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Published Portfolio | SecondLife Resume</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Playfair+Display:wght@400;600;700&amp;family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#d2d9f4",
+                        "surface-tint": "#544fc0",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#3b35a7",
+                        "secondary": "#006591",
+                        "tertiary-fixed-dim": "#ffb694",
+                        "on-tertiary-fixed": "#351000",
+                        "tertiary-fixed": "#ffdbcc",
+                        "surface-container-high": "#e2e7ff",
+                        "on-secondary-container": "#004666",
+                        "background": "#faf8ff",
+                        "on-primary-container": "#a9a7ff",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "on-secondary-fixed-variant": "#004c6e",
+                        "surface-container-low": "#f2f3ff",
+                        "secondary-container": "#39b8fd",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#e2dfff",
+                        "primary": "#1f108e",
+                        "on-tertiary-fixed-variant": "#7a3003",
+                        "outline-variant": "#c8c4d5",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#131b2e",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#464553",
+                        "surface": "#faf8ff",
+                        "surface-variant": "#dae2fd",
+                        "surface-bright": "#faf8ff",
+                        "tertiary-container": "#752c00",
+                        "on-secondary-fixed": "#001e2f",
+                        "inverse-primary": "#c3c0ff",
+                        "on-background": "#131b2e",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#fe9562",
+                        "on-error": "#ffffff",
+                        "outline": "#777584",
+                        "tertiary": "#511c00",
+                        "inverse-surface": "#283044",
+                        "surface-container": "#eaedff",
+                        "primary-container": "#3730a3",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#0f0069",
+                        "surface-container-highest": "#dae2fd",
+                        "inverse-on-surface": "#eef0ff",
+                        "secondary-fixed-dim": "#89ceff",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#c9e6ff"
+                    },
+                    "fontFamily": {
+                        "body": ["Inter", "sans-serif"],
+                        "serif": ["Playfair Display", "serif"],
+                        "display": ["Geist", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .lens-active {
+            background-color: theme('colors.primary');
+            color: theme('colors.on-primary');
+        }
+    </style>
+</head>
+<body class="bg-surface-bright text-on-surface antialiased min-h-screen flex flex-col relative selection:bg-primary/20">
+<!-- Executive Sticky Navigation -->
+<header class="sticky top-0 left-0 w-full z-50 bg-surface-bright/95 backdrop-blur-xl border-b border-surface-variant transition-all duration-300 py-4 px-6 md:px-12 flex justify-between items-center">
+<div class="flex items-center gap-8">
+<span class="text-xl font-serif font-bold text-primary tracking-wide">RM.</span>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-sm font-medium text-on-surface hover:text-primary transition-colors" href="#about">About</a>
+<a class="text-sm font-medium text-on-surface hover:text-primary transition-colors" href="#experience">Experience</a>
+<a class="text-sm font-medium text-on-surface hover:text-primary transition-colors" href="#projects">Projects</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<!-- Integrated Recruiter Lens Toggle -->
+<div class="hidden lg:flex items-center bg-surface-container-low rounded-full p-1 border border-surface-variant">
+<button class="lens-btn px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide lens-active transition-colors uppercase">HR View</button>
+<button class="lens-btn px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide text-on-surface-variant hover:text-primary transition-colors uppercase">EM View</button>
+<button class="lens-btn px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide text-on-surface-variant hover:text-primary transition-colors uppercase">TL;DR</button>
+</div>
+<!-- Integrated AI Widget -->
+<button class="flex items-center gap-2 bg-primary text-on-primary px-5 py-2 rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all text-sm font-medium">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+            Ask AI
+        </button>
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<main class="flex-1 w-full flex flex-col items-center">
+<!-- Hero Section -->
+<section class="w-full max-w-4xl mx-auto px-6 py-32 flex flex-col items-center text-center space-y-12 relative" id="about">
+<div class="absolute inset-0 bg-gradient-to-b from-surface-container-low to-transparent -z-10 opacity-50"></div>
+<div class="w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden shadow-2xl relative mb-4">
+<img alt="Alex Mercer" class="object-cover w-full h-full absolute inset-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3dLfyfIKRfBwy8L3iQifwR8iIjqQ4o0XsZ7DV9xAJbqDnBi2uHduEFNdxDn_8NAFX7mib56sCi5RvwBbbTQltuNI4mEHD6dmlyt4pVHU_0z_gFPik3MBOMeaX2WWYJvRlayEHoTueA1J9cWByTXJOAHS9eLOIsoC_PPYvBf1SEULUmtR7fo4XxIpD1hLI_q_PIHLOjLwg8RMnlNPym8KLE_2e10nt0mQLLxjSTm39-HFFVEXSUlADIA">
+</div>
+<div class="space-y-6 max-w-3xl">
+<h1 class="text-5xl md:text-7xl font-serif font-bold text-on-surface tracking-tight">Alex Mercer</h1>
+<h2 class="text-xl md:text-2xl font-body font-light text-primary tracking-widest uppercase">Senior Full-Stack Engineer</h2>
+<p class="text-lg md:text-xl font-body font-light text-on-surface-variant leading-relaxed max-w-2xl mx-auto pt-4">
+                Building scalable web applications and intuitive user experiences. Passionate about bridging the gap between complex engineering challenges and elegant design solutions.
+            </p>
+</div>
+<div class="flex gap-6 pt-8 border-t border-surface-variant w-32 justify-center">
+<a class="text-on-surface hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-2xl">link</span></a>
+<a class="text-on-surface hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-2xl">code</span></a>
+<a class="text-on-surface hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-2xl">mail</span></a>
+</div>
+</section>
+<!-- Experience Timeline -->
+<section class="w-full bg-surface py-32 px-6" id="experience">
+<div class="max-w-3xl mx-auto">
+<div class="text-center mb-20">
+<h3 class="text-3xl font-serif font-bold text-on-surface">Professional Journey</h3>
+<div class="w-12 h-1 bg-primary mx-auto mt-6"></div>
+</div>
+<div class="space-y-16 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-surface-variant">
+<!-- Role 1 -->
+<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+<div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface-bright bg-primary shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+<span class="material-symbols-outlined text-on-primary text-sm">work</span>
+</div>
+<div class="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] bg-surface-bright p-8 rounded-2xl shadow-sm border border-surface-variant hover:shadow-md hover:border-primary/30 transition-all text-left">
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-2">
+<h4 class="text-xl font-serif font-bold text-on-surface">Lead Developer</h4>
+<span class="text-xs font-bold uppercase tracking-wider text-primary">2021 - Present</span>
+</div>
+<p class="text-sm font-medium text-on-surface-variant mb-4">TechNova Solutions</p>
+<p class="text-base font-light text-on-surface-variant mb-6 leading-relaxed">
+                            Architected and delivered a cloud-native microservices platform that increased system throughput by 40%. Mentored a team of 5 junior developers, improving code review turnaround times.
+                        </p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 rounded-full border border-primary/20 text-primary text-xs font-medium">React</span>
+<span class="px-3 py-1 rounded-full border border-primary/20 text-primary text-xs font-medium">Node.js</span>
+<span class="px-3 py-1 rounded-full border border-primary/20 text-primary text-xs font-medium">AWS</span>
+</div>
+</div>
+</div>
+<!-- Role 2 -->
+<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+<div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface-bright bg-surface-variant text-on-surface shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+<span class="material-symbols-outlined text-sm">work_outline</span>
+</div>
+<div class="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] bg-surface-bright p-8 rounded-2xl shadow-sm border border-surface-variant hover:shadow-md hover:border-primary/30 transition-all text-left">
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-2">
+<h4 class="text-xl font-serif font-bold text-on-surface">Frontend Engineer</h4>
+<span class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">2018 - 2021</span>
+</div>
+<p class="text-sm font-medium text-on-surface-variant mb-4">DesignSystem Inc.</p>
+<p class="text-base font-light text-on-surface-variant leading-relaxed">
+                            Spearheaded the migration of legacy jQuery applications to modern React architectures, establishing robust design system components.
+                        </p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Project Highlights (Minimalist Image Focus) -->
+<section class="w-full py-32 px-6" id="projects">
+<div class="max-w-5xl mx-auto">
+<div class="text-center mb-20">
+<h3 class="text-3xl font-serif font-bold text-on-surface">Selected Works</h3>
+<div class="w-12 h-1 bg-primary mx-auto mt-6"></div>
+</div>
+<div class="space-y-32">
+<!-- Project 1 -->
+<div class="flex flex-col items-center gap-8">
+<div class="w-full aspect-[16/9] bg-surface-container-high rounded-sm overflow-hidden shadow-lg border border-surface-variant relative group">
+<div class="absolute inset-0 bg-primary/5 flex items-center justify-center">
+<span class="text-on-surface-variant font-serif italic text-lg">[ High-Resolution Project Image Placeholder ]</span>
+</div>
+</div>
+<div class="text-center max-w-2xl">
+<h4 class="text-2xl font-serif font-bold text-on-surface mb-4">Enterprise Dashboard Redesign</h4>
+<p class="text-on-surface-variant font-light text-lg">A comprehensive overhaul of core business intelligence tools, emphasizing data clarity and user workflow efficiency.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="w-full py-16 px-6 md:px-12 bg-surface flex flex-col md:flex-row justify-between items-center border-t border-surface-variant">
+<div class="flex flex-col md:flex-row items-center gap-6">
+<span class="text-lg font-serif font-bold text-primary">RM.</span>
+<p class="text-sm font-light text-on-surface-variant">© 2024 ResumeMagic AI.</p>
+</div>
+<div class="flex gap-6 mt-6 md:mt-0">
+<button class="text-sm font-medium text-primary hover:underline underline-offset-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">download</span> PDF
+        </button>
+<button class="text-sm font-medium text-primary hover:underline underline-offset-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">person_add</span> Contact
+        </button>
+</div>
+</footer>
+<script>
+    document.querySelectorAll('.lens-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.lens-btn').forEach(b => {
+                b.classList.remove('lens-active', 'bg-primary', 'text-on-primary');
+                b.classList.add('text-on-surface-variant');
+            });
+            this.classList.add('lens-active');
+            this.classList.remove('text-on-surface-variant');
+        });
+    });
+</script>
+</body></html>
