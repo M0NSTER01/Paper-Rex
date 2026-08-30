@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, LayoutTemplate, ExternalLink, Edit, MoreVertical, LogOut, UploadCloud, Loader2, Trash2 } from 'lucide-react';
+import { Plus, LayoutTemplate, ExternalLink, Edit, MoreVertical, LogOut, UploadCloud, Loader2, Trash2, Share2, Copy } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
 import axios from 'axios';
 
 export default function Dashboard() {
@@ -11,6 +12,8 @@ export default function Dashboard() {
   // Modal states
   const [showNewModal, setShowNewModal] = useState(false);
   const [newPortfolioName, setNewPortfolioName] = useState('');
+  const [shareUrl, setShareUrl] = useState(null);
+  const [copied, setCopied] = useState(false);
   const [modalStep, setModalStep] = useState('upload'); // 'upload' | 'extracting' | 'theme'
   const [selectedTheme, setSelectedTheme] = useState('Minimalist');
   
@@ -37,6 +40,14 @@ export default function Dashboard() {
   }, [navigate]);
 
   
+  
+  const handleCopy = () => {
+    if(!shareUrl) return;
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this portfolio? This cannot be undone.")) return;
     try {
@@ -227,9 +238,14 @@ export default function Dashboard() {
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                               Latest Deploy (Live on Netlify)
                             </a>
-                            <button onClick={() => handleDeleteDeploy(portfolio.id, 0)} className="text-blue-300 hover:text-red-500 opacity-0 group-hover/latest:opacity-100 transition-opacity" title="Delete latest deploy link">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            <div className="flex items-center gap-1 opacity-0 group-hover/latest:opacity-100 transition-opacity">
+                                <button onClick={() => setShareUrl(portfolio.data.liveUrl)} className="text-blue-300 hover:text-blue-600 transition-colors" title="Share latest deploy link">
+                                  <Share2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => handleDeleteDeploy(portfolio.id, 0)} className="text-blue-300 hover:text-red-500 transition-colors" title="Delete latest deploy link">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                           </div>
                           
                           {portfolio.data?.deployments && portfolio.data.deployments.length > 1 && (
@@ -241,9 +257,14 @@ export default function Dashboard() {
                                       <a href={dep.url} target="_blank" rel="noreferrer" className="block truncate text-gray-400 hover:text-blue-500 transition-colors" title={dep.url}>
                                         {new Date(dep.date).toLocaleString()}
                                       </a>
-                                      <button onClick={() => handleDeleteDeploy(portfolio.id, i + 1)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover/dep:opacity-100 transition-opacity" title="Delete this deploy link">
-                                        <Trash2 className="w-3 h-3" />
-                                      </button>
+                                      <div className="flex items-center gap-1 opacity-0 group-hover/dep:opacity-100 transition-opacity">
+                                          <button onClick={() => setShareUrl(dep.url)} className="text-gray-300 hover:text-blue-500 transition-colors" title="Share this deploy link">
+                                            <Share2 className="w-3 h-3" />
+                                          </button>
+                                          <button onClick={() => handleDeleteDeploy(portfolio.id, i + 1)} className="text-gray-300 hover:text-red-500 transition-colors" title="Delete this deploy link">
+                                            <Trash2 className="w-3 h-3" />
+                                          </button>
+                                        </div>
                                     </div>
                                   ))}
                               </div>
@@ -364,6 +385,36 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+        {/* Share Modal */}
+        {shareUrl && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl border border-gray-100">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold font-geist text-gray-900 flex items-center gap-2"><Share2 className="w-5 h-5"/> Share Deploy</h3>
+                <button onClick={() => setShareUrl(null)} className="text-gray-400 hover:text-gray-600 transition">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              
+              <div className="flex flex-col items-center justify-center mb-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
+                <QRCodeCanvas value={shareUrl} size={180} level={"H"} className="rounded-lg shadow-sm" />
+                <p className="text-xs text-gray-500 mt-4 text-center">Scan to open on mobile</p>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Live URL</label>
+                <div className="flex items-center gap-2">
+                  <input type="text" readOnly value={shareUrl} className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-600 outline-none" />
+                  <button onClick={handleCopy} className="bg-[var(--color-primary)] text-white p-2.5 rounded-lg hover:bg-[var(--color-secondary)] transition shadow-sm" title="Copy to clipboard">
+                    {copied ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <Copy className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
     </div>
   );
 }
