@@ -10,25 +10,11 @@ import CleanAcademicTemplate from '../components/templates/CleanAcademicTemplate
 import MidnightDeveloperTemplate from '../components/templates/MidnightDeveloperTemplate';
 import NeonCreativeTemplate from '../components/templates/NeonCreativeTemplate';
 
-const MOCK_DATA = {
-  intro: {
-    name: 'Jane Doe',
-    title: 'Senior Frontend Engineer',
-    summary: 'Passionate frontend engineer with 5+ years of experience building scalable web applications using React and Tailwind CSS.',
-  },
-  experience: [
-    { id: 1, role: 'Senior Frontend Engineer', company: 'TechCorp', years: '2021 - Present', desc: 'Led the migration to Next.js.' },
-    { id: 2, role: 'Web Developer', company: 'WebSolutions', years: '2018 - 2021', desc: 'Developed responsive client websites.' },
-  ],
-  education: [
-    { id: 1, degree: 'B.S. Computer Science', school: 'State University', years: '2014 - 2018' }
-  ],
-  skills: ['React', 'TypeScript', 'Tailwind CSS', 'Node.js']
-};
 
 export default function Portfolio() {
   const { id } = useParams();
   const [theme, setTheme] = useState('Minimalist');
+  const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -43,10 +29,9 @@ export default function Portfolio() {
   const fetchPortfolio = async (portfolioId) => {
     try {
       // It is now a public route
-      const res = await axios.get(`http://localhost:5000/api/portfolios/${portfolioId}`);
-      if (res.data.theme) {
-        setTheme(res.data.theme);
-      }
+      const res = await axios.get(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`);
+      if (res.data.theme) setTheme(res.data.theme);
+      if (res.data.data) setData(res.data.data);
     } catch (err) {
       console.error(err);
       setError('Portfolio not found');
@@ -77,23 +62,23 @@ export default function Portfolio() {
 
   const renderTemplate = () => {
     switch (theme) {
-      case 'Modern': return <ModernTemplate data={MOCK_DATA} />;
-      case 'Data Driven': return <DataDrivenTemplate data={MOCK_DATA} />;
-      case 'Clean Academic': return <CleanAcademicTemplate data={MOCK_DATA} />;
-      case 'Midnight Developer': return <MidnightDeveloperTemplate data={MOCK_DATA} />;
-      case 'Neon Creative': return <NeonCreativeTemplate data={MOCK_DATA} />;
+      case 'Modern': return <ModernTemplate data={data} />;
+      case 'Data Driven': return <DataDrivenTemplate data={data} />;
+      case 'Clean Academic': return <CleanAcademicTemplate data={data} />;
+      case 'Midnight Developer': return <MidnightDeveloperTemplate data={data} />;
+      case 'Neon Creative': return <NeonCreativeTemplate data={data} />;
       case 'Minimalist':
-      default: return <MinimalistTemplate data={MOCK_DATA} />;
+      default: return <MinimalistTemplate data={data} />;
     }
   };
 
   return (
-    <div className="h-screen w-full relative">
+    <div className="min-h-screen w-full relative">
       {/* Optional Return to Editor button - only visible if we have a token (user is likely the owner) */}
       {localStorage.getItem('token') && (
         <Link 
           to={`/editor?id=${id}`}
-          className="fixed top-4 left-4 z-[9999] bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-700 px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 hover:bg-gray-50 transition text-sm font-semibold opacity-50 hover:opacity-100"
+          className="fixed bottom-4 left-4 z-[9999] bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-700 px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 hover:bg-gray-50 transition text-sm font-semibold opacity-50 hover:opacity-100"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Editor
         </Link>

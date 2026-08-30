@@ -3,7 +3,7 @@ import React from 'react';
 
 export default function CleanAcademicTemplate({ data }) {
     return (
-        <div className="theme-clean-academic bg-surface-bright text-on-surface w-full h-full overflow-x-hidden overflow-y-auto antialiased relative" style={{ transform: 'translateZ(0)' }}>
+        <div className="theme-clean-academic bg-surface-bright text-on-surface w-full min-h-screen overflow-x-hidden flex md:flex-row flex-col antialiased relative" style={{ transform: 'translateZ(0)' }}>
             
 {/*  Mobile Nav (TopAppBar logic applied for mobile viewing)  */}
 <header className="md:hidden flex justify-between items-center px-margin-mobile h-16 bg-surface shadow-sm border-b border-outline-variant fixed top-0 w-full z-50">
