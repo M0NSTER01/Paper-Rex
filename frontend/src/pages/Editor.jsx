@@ -17,6 +17,7 @@ const DEFAULT_DATA = {
   projects: [],
   certifications: [],
   contact: { email: '', linkedin: '', github: '' },
+  ats: { score: 0, feedback: '' },
   visible: {
     education: true,
     skills: true,
@@ -30,7 +31,7 @@ export default function Editor() {
   const [data, setData] = useState(DEFAULT_DATA);
   const [theme, setTheme] = useState('Minimalist');
   const [previewMode, setPreviewMode] = useState('desktop');
-  const [completeness, setCompleteness] = useState(0);
+  const [evaluatingAts, setEvaluatingAts] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -47,19 +48,18 @@ export default function Editor() {
     }
   }, [portfolioId]);
 
+  // Autosave logic
   useEffect(() => {
-    // Calculate completeness
-    let filled = 0;
-    let total = 7;
-    if (data.intro?.name) filled++;
-    if (data.experience?.length) filled++;
-    if (data.education?.length) filled++;
-    if (data.skills?.length) filled++;
-    if (data.projects?.length) filled++;
-    if (data.certifications?.length) filled++;
-    if (data.contact?.email) filled++;
-    setCompleteness(Math.round((filled / total) * 100));
-  }, [data]);
+    if (!portfolioId || loading || !data.intro?.name?.trim()) return;
+    const timeoutId = setTimeout(() => {
+       const token = localStorage.getItem('token');
+       axios.put(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`, 
+          { theme, data },
+          { headers: { Authorization: `Bearer ${token}` } }
+       ).catch(err => console.error('Autosave failed', err));
+    }, 1500);
+    return () => clearTimeout(timeoutId);
+  }, [data, theme, portfolioId, loading]);
 
   const fetchPortfolio = async (id) => {
     try {
@@ -141,6 +141,26 @@ export default function Editor() {
     }));
   };
 
+  const handleRecalculateATS = async () => {
+    if (!portfolioId) return;
+    setEvaluatingAts(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/evaluate-ats', { data }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setData(prev => ({
+        ...prev,
+        ats: { score: res.data.score, feedback: res.data.feedback }
+      }));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to calculate ATS score.');
+    } finally {
+      setEvaluatingAts(false);
+    }
+  };
+
   const handlePublish = () => {
     handleSave().then((success) => {
       if (success !== false) {
@@ -188,11 +208,19 @@ export default function Editor() {
         <div className="flex items-center gap-6">
           <h1 className="font-bold font-geist text-xl text-[var(--color-primary)]">Editor</h1>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500">Completeness</span>
+            <span className="text-sm text-gray-500 cursor-help" title={data.ats?.feedback || 'Click Recalculate to get ATS feedback'}>ATS Score</span>
             <div className="w-32 bg-gray-200 rounded-full h-2">
-              <div className="bg-green-500 h-2 rounded-full transition-all" style={{ width: `${completeness}%` }}></div>
+              <div className={`h-2 rounded-full transition-all ${data.ats?.score > 70 ? 'bg-green-500' : data.ats?.score > 40 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${data.ats?.score || 0}%` }}></div>
             </div>
-            <span className="text-sm font-semibold">{completeness}%</span>
+            <span className="text-sm font-semibold">{data.ats?.score || 0}%</span>
+            <button 
+               onClick={handleRecalculateATS}
+               disabled={evaluatingAts}
+               className="text-xs bg-[var(--color-primary)] text-white px-2 py-1 rounded hover:bg-[var(--color-secondary)] transition disabled:opacity-50 flex items-center gap-1"
+            >
+              {evaluatingAts ? <Loader2 className="w-3 h-3 animate-spin"/> : null}
+              {evaluatingAts ? 'Evaluating...' : 'Recalculate'}
+            </button>
           </div>
         </div>
         
