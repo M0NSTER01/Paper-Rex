@@ -1,3 +1,4 @@
+const axios = require('axios');
 const express = require("express");
 const path = require("path");
 const { createServer } = require("http");
@@ -12,7 +13,8 @@ require("dotenv").config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const server = createServer(app);
@@ -243,7 +245,7 @@ app.post('/api/extract-resume', authenticateToken, upload.single('resume'), asyn
         const text = pdfData.text;
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash-lite" });
         const prompt = "Extract the following information from the resume text below and return it strictly as a JSON object matching this structure:\n{\n  \"intro\": { \"name\": \"\", \"title\": \"\", \"summary\": \"\" },\n  \"experience\": [ { \"id\": 1, \"role\": \"\", \"company\": \"\", \"years\": \"\", \"desc\": \"\" } ],\n  \"education\": [ { \"id\": 1, \"degree\": \"\", \"school\": \"\", \"years\": \"\", \"desc\": \"\" } ],\n  \"skills\": [ \"Skill 1\", \"Skill 2\" ],\n  \"projects\": [ { \"id\": 1, \"title\": \"\", \"desc\": \"\", \"tech\": [\"Tech 1\"] } ],\n  \"certifications\": [ { \"id\": 1, \"title\": \"\", \"issuer\": \"\", \"year\": \"\" } ],\n  \"contact\": { \"email\": \"\", \"linkedin\": \"\", \"github\": \"\" },\n  \"visible\": {\n    \"education\": true,\n    \"skills\": true,\n    \"experience\": true,\n    \"projects\": true,\n    \"certifications\": true\n  }\n}\n\nRules:\n- For the \"visible\" object, set the value to false ONLY IF the section is empty or missing in the resume. Otherwise, set it to true.\n- Extract as accurately as possible. If something is missing, leave it as an empty string or empty array.\n- DO NOT wrap the output in markdown code blocks like ```json. Return ONLY the raw JSON string.\n\nResume Text:\n" + text;
         
         const result = await model.generateContent(prompt);
@@ -270,7 +272,7 @@ app.post('/api/evaluate-ats', authenticateToken, async (req, res) => {
 
     try {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash-lite" });
         
         const prompt = `Evaluate the following resume data for ATS (Applicant Tracking System) compatibility, impact, and overall quality. 
 Analyze the keywords, descriptions, and structure.
@@ -333,6 +335,48 @@ app.post('/api/contact', async (req, res) => {
     } catch (err) {
         console.error("Email error:", err);
         res.status(500).json({ error: "Failed to send email" });
+    }
+});
+
+
+const AdmZip = require('adm-zip');
+
+app.post('/api/deploy', authenticateToken, async (req, res) => {
+    const { htmlContent, slug } = req.body;
+    if (!htmlContent || !slug) return res.status(400).json({ error: "Missing htmlContent or slug" });
+
+    try {
+        const token = process.env.NETLIFY_TOKEN;
+        
+        // 1. Create a zip containing the index.html
+        const zip = new AdmZip();
+        zip.addFile('build/index.html', Buffer.from(htmlContent, 'utf8'));
+        const zipBuffer = zip.toBuffer();
+
+        // 2. Create a new site on Netlify
+        const siteName = 'portfolio-' + slug + '-' + Math.floor(Math.random() * 100000);
+        const siteRes = await axios.post('https://api.netlify.com/api/v1/sites', 
+            { name: siteName },
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const siteId = siteRes.data.id;
+        const liveUrl = siteRes.data.url;
+
+        // 3. Deploy the zip to the site
+        await axios.post(`https://api.netlify.com/api/v1/sites/${siteId}/deploys`, 
+            zipBuffer, 
+            { 
+                headers: { 
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/zip'
+                } 
+            }
+        );
+
+        res.json({ liveUrl: liveUrl.replace(/^https?:\/\//, '') });
+    } catch (err) {
+        console.error("Deploy error:", err.response ? err.response.data : err.message);
+        res.status(500).json({ error: "Failed to deploy to Netlify" });
     }
 });
 

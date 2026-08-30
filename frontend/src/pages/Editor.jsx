@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { Save, ExternalLink, Settings, Briefcase, GraduationCap, User, Trophy, LayoutTemplate, Loader2, Monitor, Tablet, Smartphone, Code, Mail, Eye, EyeOff, Plus, Trash2, UploadCloud } from 'lucide-react';
+import { Copy, Share2, Save, ExternalLink, Settings, Briefcase, GraduationCap, User, Trophy, LayoutTemplate, Loader2, Monitor, Tablet, Smartphone, Code, Mail, Eye, EyeOff, Plus, Trash2, UploadCloud } from 'lucide-react';
 import MinimalistTemplate from '../components/templates/MinimalistTemplate';
 import ModernTemplate from '../components/templates/ModernTemplate';
 import DataDrivenTemplate from '../components/templates/DataDrivenTemplate';
@@ -34,6 +34,8 @@ export default function Editor() {
   const [evaluatingAts, setEvaluatingAts] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deploying, setDeploying] = useState(false);
+  const [deploySuccessUrl, setDeploySuccessUrl] = useState(null);
   const [saved, setSaved] = useState(false);
   
   const navigate = useNavigate();
@@ -161,6 +163,109 @@ export default function Editor() {
     }
   };
 
+  
+  const handleDeploy = async () => {
+    setDeploying(true);
+    try {
+      const el = document.getElementById('template-preview');
+      if (!el) return;
+      
+      const customStyles = Array.from(document.querySelectorAll('style')).map(s => s.innerHTML).join('\n');
+      const innerHtml = el.innerHTML;
+      
+      const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${data.intro?.name || 'Portfolio'}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+  <style>
+    ${customStyles}
+  </style>
+</head>
+<body>
+  ${innerHtml}
+  
+    <script>
+      const contactForm = document.getElementById('portfolio-contact-form');
+      if (contactForm) {
+        contactForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = contactForm.querySelector('button[type="submit"]');
+          const originalText = btn.innerText;
+          btn.innerText = 'Sending...';
+          btn.disabled = true;
+
+          const toEmail = contactForm.getAttribute('data-to-email');
+          const name = contactForm.querySelector('#name').value;
+          const email = contactForm.querySelector('#email').value;
+          const message = contactForm.querySelector('#message').value;
+
+          try {
+            const res = await fetch('https://4zxl3477-5000.inc1.devtunnels.ms/api/contact', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name, email, message, toEmail })
+            });
+            if (res.ok) {
+              btn.innerText = 'Message sent!';
+              btn.style.backgroundColor = '#16a34a'; // green
+              contactForm.reset();
+            } else {
+              throw new Error('Failed');
+            }
+          } catch(err) {
+            btn.innerText = 'Failed to send';
+            btn.style.backgroundColor = '#dc2626'; // red
+          }
+          
+          setTimeout(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            btn.style.backgroundColor = '';
+          }, 3000);
+        });
+      }
+    </script>
+
+  </body>
+  </html>`;
+
+      const token = localStorage.getItem('token');
+      const slug = (data.intro?.name || 'user').replace(/\s+/g, '-').toLowerCase() + '-' + Math.floor(Math.random() * 1000);
+
+      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/deploy', {
+        htmlContent,
+        slug
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const url = 'https://' + res.data.liveUrl;
+      const updatedData = { ...data, liveUrl: url };
+      setData(updatedData);
+      
+      // Save to DB so Dashboard can show it
+      if (portfolioId) {
+        await axios.put(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`, 
+          { theme, data: updatedData },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+
+      setDeploySuccessUrl(url);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to deploy to Netlify');
+    } finally {
+      setDeploying(false);
+    }
+  };
+
   const handlePublish = () => {
     handleSave().then((success) => {
       if (success !== false) {
@@ -246,7 +351,10 @@ export default function Editor() {
             {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : saved ? <span className="text-green-600 font-bold">✓</span> : <Save className="w-4 h-4" />} {saved ? "Saved!" : "Save"}
           </button>
           <button onClick={handlePublish} className="flex items-center gap-2 bg-[var(--color-primary)] text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-[var(--color-secondary)] transition shadow-sm">
-            <ExternalLink className="w-4 h-4" /> Publish
+            <ExternalLink className="w-4 h-4" /> View Live
+          </button>
+          <button onClick={handleDeploy} disabled={deploying} className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-gray-800 transition shadow-sm disabled:opacity-50">
+            {deploying ? <Loader2 className="w-4 h-4 animate-spin"/> : <Monitor className="w-4 h-4" />} Deploy to Netlify
           </button>
         </div>
       </header>
@@ -463,7 +571,8 @@ export default function Editor() {
         <div className="flex-1 bg-gray-100 flex items-center justify-center p-4 overflow-hidden relative">
           <div className="w-full h-full flex justify-center overflow-auto items-start pt-4 pb-12">
             <div 
-              className="bg-white shadow-2xl overflow-y-auto relative transition-all duration-300 ease-in-out border border-gray-200 flex flex-col"
+              id="template-preview"
+                className="bg-white shadow-2xl overflow-y-auto relative transition-all duration-300 ease-in-out border border-gray-200 flex flex-col"
               style={{
                 width: previewMode === 'desktop' ? '100%' : previewMode === 'tablet' ? '768px' : '375px',
                 height: '100%',
@@ -479,6 +588,35 @@ export default function Editor() {
         </div>
 
       </div>
+
+      {/* Deployment Success Modal */}
+      {deploySuccessUrl && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center border border-gray-100">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-green-600 text-3xl">check_circle</span>
+            </div>
+            <h3 className="text-2xl font-bold font-geist mb-2 text-gray-900">Deployed Successfully!</h3>
+            <p className="text-gray-500 mb-6 text-sm">Your portfolio is now live on Netlify.</p>
+            <div className="space-y-3">
+              <a 
+                href={deploySuccessUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 bg-[var(--color-primary)] text-white py-3 px-4 rounded-xl font-semibold hover:bg-[var(--color-secondary)] transition-colors shadow-md hover:shadow-lg"
+              >
+                <ExternalLink className="w-5 h-5" /> Open Live Site
+              </a>
+              <button 
+                onClick={() => setDeploySuccessUrl(null)}
+                className="w-full py-3 px-4 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

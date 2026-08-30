@@ -25,7 +25,7 @@ export default function ContactForm({ toEmail, className = "" }) {
     };
 
     return (
-        <form onSubmit={handleSubmit} className={`w-full max-w-2xl mx-auto space-y-6 ${className}`}>
+        <form id="portfolio-contact-form" data-to-email={toEmail} onSubmit={handleSubmit} className={`w-full max-w-2xl mx-auto space-y-6 ${className}`}>
             <div className="grid md:grid-cols-2 gap-6">
                 <div>
                     <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="name">Name</label>
