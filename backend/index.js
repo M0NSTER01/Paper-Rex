@@ -20,11 +20,16 @@ const server = createServer(app);
 const JWT_SECRET = "YOUR_JWT_SECRET";
 
 // Initialize MySQL Database Connection Pool
+const fs = require('fs');
 const pool = mysql2.createPool({
-    host: "localhost",
-    user: "root",
-    password: "YOUR_DB_PASSWORD",
-    database: "secondlife_resume"
+    host: process.env.DB_HOST || "localhost",
+    port: process.env.DB_PORT || 3306,
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASS || "YOUR_DB_PASSWORD",
+    database: process.env.DB_NAME || "secondlife_resume",
+    ssl: {
+        ca: fs.readFileSync(__dirname + '/ca.pem')
+    }
 }).promise();
 
 const upload = multer({ storage: multer.memoryStorage() });
