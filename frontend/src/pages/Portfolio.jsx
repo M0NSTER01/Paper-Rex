@@ -29,7 +29,7 @@ export default function Portfolio() {
   const fetchPortfolio = async (portfolioId) => {
     try {
       // It is now a public route
-      const res = await axios.get(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`);
+      const res = await axios.get(`http://localhost:5000/api/portfolios/${portfolioId}`);
       if (res.data.theme) setTheme(res.data.theme);
       if (res.data.data) setData(res.data.data);
     } catch (err) {

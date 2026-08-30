@@ -222,6 +222,169 @@ app.post('/api/extract-resume', authenticateToken, upload.single('resume'), asyn
     }
 });
 
+// ── ATS Resume Optimization ──────────────────────────────────────────
+const geminiSystemInstruction = `You are an elite Technical Recruiter, ATS (Applicant Tracking System) Optimizer, and Resume Writer. 
+Your objective is to take a user's raw experience data and a target job description, and output a highly optimized, tailored resume in strict JSON format.
+
+INPUT DATA:
+The user will provide:
+1. Candidate Profile: (Raw text, dictated voice transcript, or extracted PDF data)
+2. Target Context: (Target Job Title, Company Name, and raw Job Description)
+
+INSTRUCTIONS:
+1. Data Extraction & Mapping: Map the user's raw data to the required JSON schema. 
+2. Job Tailoring: Rewrite the user's "Experience" and "Projects" descriptions to heavily align with the Target Context. Use the STAR method (Situation, Task, Action, Result). Quantify achievements where possible. 
+3. Keyword Injection: Naturally weave in relevant keywords from the Job Description into the summary, skills, and experience sections. DO NOT lie or invent experience they do not have.
+4. ATS Scoring: Calculate an ATS compatibility score (integer from 0 to 100) based on how well the user's tailored background matches the Target Context.
+5. Feedback: Identify matching keywords, missing keywords (skills they need to add if they have them), and provide 2-3 brief, actionable suggestions to improve the resume match.
+
+OUTPUT FORMAT:
+You must respond with ONLY valid JSON. No markdown formatting, no code blocks, no preamble, and no postscript.
+
+SCHEMA TO STRICTLY FOLLOW:
+{
+  "optimized_profile": {
+    "professional_intro": {
+      "full_name": "string",
+      "professional_title": "string",
+      "summary": "string (3-4 impactful sentences, tailored to target role)"
+    },
+    "experience": [
+      {
+        "company": "string",
+        "role": "string",
+        "duration": "string",
+        "description": "string (Action-oriented, STAR method, tailored bullet points)"
+      }
+    ],
+    "education": [
+      {
+        "institution": "string",
+        "degree": "string",
+        "year": "string"
+      }
+    ],
+    "skills": ["string", "string"],
+    "projects": [
+      {
+        "name": "string",
+        "description": "string (STAR method, tailored)",
+        "technologies": ["string"]
+      }
+    ],
+    "certifications": ["string"],
+    "contact_info": {
+      "email": "string",
+      "linkedin_url": "string",
+      "github_url": "string"
+    }
+  },
+  "ats_analysis": {
+    "score": "number (integer 0-100)",
+    "matching_keywords": ["string"],
+    "missing_keywords": ["string"],
+    "suggestions": ["string", "string"]
+  }
+}`;
+
+app.post('/api/optimize-resume', authenticateToken, async (req, res) => {
+    const { candidateData, targetPosition, companyName, jobDescription } = req.body;
+
+    if (!candidateData || !jobDescription) {
+        return res.status(400).json({ error: "Candidate data and job description are required" });
+    }
+
+    try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash-lite",
+            systemInstruction: geminiSystemInstruction,
+            generationConfig: {
+                responseMimeType: "application/json"
+            }
+        });
+
+        const userMessage = `
+CANDIDATE PROFILE:
+${typeof candidateData === 'string' ? candidateData : JSON.stringify(candidateData, null, 2)}
+
+TARGET CONTEXT:
+- Target Position: ${targetPosition || 'Not specified'}
+- Company Name: ${companyName || 'Not specified'}
+- Job Description:
+${jobDescription}
+`;
+
+        const result = await model.generateContent(userMessage);
+        const responseText = result.response.text().trim();
+        const parsed = JSON.parse(responseText);
+
+        const profile = parsed.optimized_profile || {};
+        const intro = profile.professional_intro || {};
+        const atsAnalysis = parsed.ats_analysis || {};
+
+        // Map Gemini output → editor DEFAULT_DATA schema
+        const editorData = {
+            intro: {
+                name: intro.full_name || '',
+                title: intro.professional_title || '',
+                summary: intro.summary || ''
+            },
+            experience: (profile.experience || []).map((exp, i) => ({
+                id: i + 1,
+                role: exp.role || '',
+                company: exp.company || '',
+                years: exp.duration || '',
+                desc: exp.description || ''
+            })),
+            education: (profile.education || []).map((edu, i) => ({
+                id: i + 1,
+                degree: edu.degree || '',
+                school: edu.institution || '',
+                years: edu.year || ''
+            })),
+            skills: profile.skills || [],
+            projects: (profile.projects || []).map((proj, i) => ({
+                id: i + 1,
+                title: proj.name || '',
+                desc: proj.description || '',
+                tech: proj.technologies || []
+            })),
+            certifications: (profile.certifications || []).map((cert, i) => {
+                if (typeof cert === 'string') {
+                    return { id: i + 1, title: cert, issuer: '', year: '' };
+                }
+                return { id: i + 1, title: cert.title || '', issuer: cert.issuer || '', year: cert.year || '' };
+            }),
+            contact: {
+                email: profile.contact_info?.email || '',
+                linkedin: profile.contact_info?.linkedin_url || '',
+                github: profile.contact_info?.github_url || ''
+            },
+            visible: {
+                education: true,
+                skills: true,
+                experience: true,
+                projects: true,
+                certifications: true
+            }
+        };
+
+        res.json({
+            editorData,
+            atsAnalysis: {
+                score: atsAnalysis.score || 0,
+                matching_keywords: atsAnalysis.matching_keywords || [],
+                missing_keywords: atsAnalysis.missing_keywords || [],
+                suggestions: atsAnalysis.suggestions || []
+            }
+        });
+    } catch (err) {
+        console.error("ATS optimization error:", err);
+        res.status(500).json({ error: "Failed to optimize resume. Please try again." });
+    }
+});
+
 const PORT = 5000;
 server.listen(PORT, () => {
     console.log("Server is running on port " + PORT);

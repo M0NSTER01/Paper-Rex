@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Editor from './pages/Editor';
 import Analytics from './pages/Analytics';
 import Portfolio from './pages/Portfolio';
+import CreateResume from './pages/CreateResume';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Route path="/editor" element={<Editor />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/portfolio/:id" element={<Portfolio />} />
+      <Route path="/create-resume" element={<CreateResume />} />
     </Routes>
   );
 }

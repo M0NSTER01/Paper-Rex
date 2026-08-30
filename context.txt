@@ -1,0 +1,119 @@
+1) What this project is (purpose/domain)
+This is a resume-to-portfolio web app (“SecondLife Resume” / “ResumeMagic”) that lets users sign up, upload a PDF resume, extract structured data with Gemini AI, edit it, choose a visual theme, and publish a shareable portfolio page.
+
+Evidence:
+
+Product messaging and value prop in landing page (“Escape the PDF Prison…”, “AI Extraction”, “Instant Web Portfolio”) (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Landing.jsx:15-43)
+Auth, dashboard, editor, analytics, and portfolio routes wired in app router (/home/runner/work/Khalsa/Khalsa/frontend/src/App.jsx:11-18)
+Resume extraction endpoint using PDF parse + Gemini (/home/runner/work/Khalsa/Khalsa/backend/index.js:196-218)
+2) Repository architecture and structure
+Top-level structure is effectively:
+
+frontend/ → React + Vite SPA
+backend/ → Express + MySQL API server
+many root-level one-off maintenance/migration scripts (*.js) that patch source files via regex/string replacement (/home/runner/work/Khalsa/Khalsa/fix_*.js, update_*.js, etc.; e.g. /home/runner/work/Khalsa/Khalsa/update_url.js:1-16, /home/runner/work/Khalsa/Khalsa/fix_backend_clean.js:11-242)
+Notable directories/files:
+
+Frontend entry and routes: frontend/src/main.jsx, frontend/src/App.jsx (/home/runner/work/Khalsa/Khalsa/frontend/src/main.jsx:7-13, /home/runner/work/Khalsa/Khalsa/frontend/src/App.jsx:11-18)
+Frontend pages: Landing, Auth, Dashboard, Editor, Analytics, Portfolio
+Theme components: 6 templates in frontend/src/components/templates/
+Backend main app: backend/index.js
+DB setup scripts: backend/setupDB.js, backend/setupTables.js
+Uploaded media folder: backend/uploads/ (contains image files)
+3) Frontend architecture (React SPA)
+Stack
+React 19 + React Router + Axios + Lucide icons (/home/runner/work/Khalsa/Khalsa/frontend/package.json:13-18)
+Vite build tooling (/home/runner/work/Khalsa/Khalsa/frontend/package.json:7-10, /home/runner/work/Khalsa/Khalsa/frontend/vite.config.js:1-11)
+Tailwind CSS v4 via Vite plugin (/home/runner/work/Khalsa/Khalsa/frontend/package.json:20-26, /home/runner/work/Khalsa/Khalsa/frontend/vite.config.js:3,9)
+Route-level components
+/ Landing (/home/runner/work/Khalsa/Khalsa/frontend/src/App.jsx:12)
+/auth Login/signup (/home/runner/work/Khalsa/Khalsa/frontend/src/App.jsx:13)
+/dashboard Portfolio management + upload flow (/home/runner/work/Khalsa/Khalsa/frontend/src/App.jsx:14)
+/editor Portfolio editing UI (/home/runner/work/Khalsa/Khalsa/frontend/src/App.jsx:15)
+/analytics Mock analytics page (/home/runner/work/Khalsa/Khalsa/frontend/src/App.jsx:16)
+/portfolio/:id Public portfolio viewer (/home/runner/work/Khalsa/Khalsa/frontend/src/App.jsx:17)
+Key functional flow
+Auth stores JWT/user in localStorage (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Auth.jsx:21-23)
+Dashboard requires token, fetches portfolios (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Dashboard.jsx:23-37, 39-45)
+New portfolio modal uploads PDF, calls extraction API, then creates portfolio with extracted JSON + selected theme (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Dashboard.jsx:73-107, 124-136)
+Editor loads by query param ?id=..., supports section editing/visibility/theme selection/save/publish (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Editor.jsx:39, 63-80, 127-141, 199-206, 208-213)
+Public portfolio page fetches /api/portfolios/:id and renders theme component (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Portfolio.jsx:29-35, 63-73, 75-89)
+4) Backend architecture (Express API)
+Stack
+Express + CORS + MySQL2 + bcrypt + JWT + multer + pdf-parse + Gemini SDK (/home/runner/work/Khalsa/Khalsa/backend/index.js:1-11)
+HTTP server wrapper created but no websocket wiring present (/home/runner/work/Khalsa/Khalsa/backend/index.js:3,18)
+API surface
+POST /api/signup create user with hashed password (/home/runner/work/Khalsa/Khalsa/backend/index.js:43-65)
+POST /api/login validate password + issue JWT (/home/runner/work/Khalsa/Khalsa/backend/index.js:67-94)
+POST /api/upload-image authenticated profile photo upload (/home/runner/work/Khalsa/Khalsa/backend/index.js:109-115)
+GET /api/portfolios authenticated list by user_id (/home/runner/work/Khalsa/Khalsa/backend/index.js:118-131)
+GET /api/portfolios/:id public fetch by id (/home/runner/work/Khalsa/Khalsa/backend/index.js:133-147)
+POST /api/portfolios authenticated create (/home/runner/work/Khalsa/Khalsa/backend/index.js:149-165)
+PUT /api/portfolios/:id authenticated update (/home/runner/work/Khalsa/Khalsa/backend/index.js:168-194)
+POST /api/extract-resume authenticated resume parsing + Gemini structured JSON extraction (/home/runner/work/Khalsa/Khalsa/backend/index.js:196-223)
+Server bind on port 5000 (/home/runner/work/Khalsa/Khalsa/backend/index.js:225-228)
+Data model (intended)
+users: id, name, email, password, created_at (/home/runner/work/Khalsa/Khalsa/backend/setupDB.js:25-33)
+portfolios: id, user_id, name, theme, timestamps (/home/runner/work/Khalsa/Khalsa/backend/setupTables.js:13-21)
+Runtime code expects an additional data column for JSON payload (/home/runner/work/Khalsa/Khalsa/backend/index.js:155-158, 179-180)
+5) Theme/template system
+There are six React template components:
+
+MinimalistTemplate, ModernTemplate, DataDrivenTemplate, CleanAcademicTemplate, MidnightDeveloperTemplate, NeonCreativeTemplate (imports in editor/portfolio: /home/runner/work/Khalsa/Khalsa/frontend/src/pages/Editor.jsx:5-10, /home/runner/work/Khalsa/Khalsa/frontend/src/pages/Portfolio.jsx:6-11)
+General pattern:
+
+Each template renders the same semantic sections (about, education, skills/technology, experience, projects, certifications, contact) with style variants, often conditionally shown via data.visible.* (example: /home/runner/work/Khalsa/Khalsa/frontend/src/components/templates/ModernTemplate.jsx:13-18, 63, 112, 188, 286; and /home/runner/work/Khalsa/Khalsa/frontend/src/components/templates/DataDrivenTemplate.jsx:56, 105, 193, 286, 309)
+Shared data keys come from editor’s DEFAULT_DATA contract (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Editor.jsx:12-27)
+Important inconsistency:
+
+CleanAcademicTemplate is mostly hardcoded content and does not consume data fields (name/content like “Dr. E. Vance” etc.) (/home/runner/work/Khalsa/Khalsa/frontend/src/components/templates/CleanAcademicTemplate.jsx:10, 18-20, 58-61; also no data. matches in file except function arg)
+6) Styling system
+Tailwind v4 import + custom design tokens defined in @theme in src/index.css (/home/runner/work/Khalsa/Khalsa/frontend/src/index.css:1-3)
+Extensive CSS variables for colors/typography plus per-theme overrides (/home/runner/work/Khalsa/Khalsa/frontend/src/index.css:4-119, 127-176, 187-235, 266-314, 334-382, 392-440, 468-516, 565-635)
+Additional theme-specific utility classes for midnight terminal style and neon brutalism (/home/runner/work/Khalsa/Khalsa/frontend/src/index.css:565-596, 599-635)
+Note:
+
+App.css appears to be leftover Vite/template styling and not imported in app entry (/home/runner/work/Khalsa/Khalsa/frontend/src/App.css:1-185, while main.jsx imports only index.css at /home/runner/work/Khalsa/Khalsa/frontend/src/main.jsx:4)
+7) Build / run / lint / test workflow found
+Frontend
+npm run dev (Vite dev server)
+npm run build
+npm run lint (Oxlint)
+npm run preview (/home/runner/work/Khalsa/Khalsa/frontend/package.json:6-11)
+Backend
+No scripts defined in backend package.json; only dependencies listed (/home/runner/work/Khalsa/Khalsa/backend/package.json:1-14)
+DB setup appears manual via node setupDB.js and node setupTables.js (based on script content, not package scripts) (/home/runner/work/Khalsa/Khalsa/backend/setupDB.js:1-46, /home/runner/work/Khalsa/Khalsa/backend/setupTables.js:1-37)
+Tests/CI
+No first-party app tests were found in source tree; visible test-like files are mainly local utility scripts (e.g. frontend/test.cjs, root test_regex.js) (/home/runner/work/Khalsa/Khalsa/frontend/test.cjs:1-15, /home/runner/work/Khalsa/Khalsa/test_regex.js:1-3)
+8) Notable components and behavior details
+Editor has rich section CRUD and visibility toggles (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Editor.jsx:127-135, 261-381)
+Editor offers desktop/tablet/phone preview widths (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Editor.jsx:191-195, 392-397)
+Portfolio page exposes public reading while showing “Back to Editor” if local token exists (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Portfolio.jsx:75-85)
+Analytics page is mock/static data, not API-backed (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Analytics.jsx:7, 59, 74, 89, 106-130)
+Dashboard create flow includes drag-drop upload + progress simulation (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Dashboard.jsx:63-70, 73-101, 247-264, 268-281)
+9) Security/operational caveats (important)
+Hardcoded DB credentials in source (/home/runner/work/Khalsa/Khalsa/backend/index.js:24-27, /home/runner/work/Khalsa/Khalsa/backend/setupDB.js:8-11, /home/runner/work/Khalsa/Khalsa/backend/setupTables.js:6-9)
+JWT secret hardcoded in source (/home/runner/work/Khalsa/Khalsa/backend/index.js:20)
+.env file exists with a Gemini API key set (sensitive secret present) (/home/runner/work/Khalsa/Khalsa/backend/.env:1)
+Frontend API base URL hardcoded to a specific dev tunnel domain across pages (/home/runner/work/Khalsa/Khalsa/frontend/src/pages/Auth.jsx:20, Dashboard.jsx:41,88,127, Editor.jsx:66,90,111, Portfolio.jsx:32)
+CORS is fully open (app.use(cors())) (/home/runner/work/Khalsa/Khalsa/backend/index.js:14)
+Schema mismatch risk: setup script’s portfolios table lacks data column required by runtime API (/home/runner/work/Khalsa/Khalsa/backend/setupTables.js:13-21 vs /home/runner/work/Khalsa/Khalsa/backend/index.js:155-158, 179-180)
+10) Evidence of code-generation/migration workflow
+The repo contains many ad-hoc patch scripts that rewrite source files programmatically:
+
+HTML-to-React template conversion and CSS extraction (/home/runner/work/Khalsa/Khalsa/frontend/process.cjs:15-47, 50-123)
+Regex fixes for templates/styles (/home/runner/work/Khalsa/Khalsa/fix_projects_rest.js:1-55, /home/runner/work/Khalsa/Khalsa/fix_certifications.js:1-123, /home/runner/work/Khalsa/Khalsa/update_neon_css.js:1-55)
+URL swapping localhost ↔ devtunnel (/home/runner/work/Khalsa/Khalsa/update_url.js:11-16)
+Backend rewrites (/home/runner/work/Khalsa/Khalsa/fix_backend_clean.js:11-242)
+This suggests iterative prototyping and scripted patching rather than a stable build pipeline for template generation.
+
+11) Major entry points and runtime environment
+Frontend browser entry: frontend/index.html + src/main.jsx (/home/runner/work/Khalsa/Khalsa/frontend/index.html:12-14, /home/runner/work/Khalsa/Khalsa/frontend/src/main.jsx:7-13)
+Backend runtime entry: backend/index.js listening on 5000 (/home/runner/work/Khalsa/Khalsa/backend/index.js:225-228)
+Expected environment: Node.js + MySQL local DB (localhost, secondlife_resume) plus Gemini API key env var (/home/runner/work/Khalsa/Khalsa/backend/index.js:23-28, 203)
+12) Unknowns / gaps
+No authoritative root README for end-to-end setup (frontend README is default Vite template, not project-specific) (/home/runner/work/Khalsa/Khalsa/frontend/README.md:1-17)
+No explicit deployment manifests (Dockerfile/compose/workflows not visible in scanned files)
+No explicit backend start scripts or migration/versioning tool
+Some template quality issues likely remain (example: Neon “Education” section currently maps projects instead of education data) (/home/runner/work/Khalsa/Khalsa/frontend/src/components/templates/NeonCreativeTemplate.jsx:64-73)
+If you want, I can next provide a risk-ranked remediation map (security + reliability + maintainability) with exact file-level fix priorities

@@ -63,7 +63,7 @@ export default function Editor() {
   const fetchPortfolio = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${id}`, {
+      const res = await axios.get(`http://localhost:5000/api/portfolios/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.theme) setTheme(res.data.theme);
@@ -87,7 +87,7 @@ export default function Editor() {
     formData.append('photo', file);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/upload-image', formData, {
+      const res = await axios.post('http://localhost:5000/api/upload-image', formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -108,7 +108,7 @@ export default function Editor() {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`, 
+      await axios.put(`http://localhost:5000/api/portfolios/${portfolioId}`, 
         { theme, data },
         { headers: { Authorization: `Bearer ${token}` } }
       );
