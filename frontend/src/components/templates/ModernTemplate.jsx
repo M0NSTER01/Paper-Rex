@@ -291,7 +291,12 @@ export default function ModernTemplate({ data }) {
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {(data?.projects || []).map((proj, index) => (
-                            <div key={index} className="bento-card p-8 flex flex-col gap-4">
+                            <div key={index} className="bento-card p-8 flex flex-col gap-4 overflow-hidden relative">
+                                {proj.image && (
+                                    <div className="w-full h-48 -mt-8 -mx-8 mb-0 relative">
+                                        <img src={proj.image} alt={proj.title} className="w-full h-full object-cover" />
+                                    </div>
+                                )}
                                 <h4 className="text-headline-md font-headline-md text-on-surface">{proj.title}</h4>
                                 <p className="text-body-md font-body-md text-on-surface-variant">{proj.desc}</p>
                                 <div className="flex gap-2 mt-auto pt-4 flex-wrap">

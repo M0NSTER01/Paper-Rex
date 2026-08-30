@@ -232,6 +232,15 @@ export default function MinimalistTemplate({ data }) {
                         <div className="space-y-32">
                             {(data?.projects || []).map((proj, index) => (
                                 <div key={index} className="flex flex-col items-center gap-8">
+                                    <div className="w-full aspect-[16/9] bg-surface-container-high rounded-sm overflow-hidden shadow-lg border border-surface-variant relative group">
+                                        {proj.image ? (
+                                            <img src={proj.image} alt={proj.title} className="w-full h-full object-cover absolute inset-0" />
+                                        ) : (
+                                            <div className="absolute inset-0 bg-primary/5 flex items-center justify-center">
+                                                <span className="text-on-surface-variant font-serif italic text-lg">[ High-Resolution Project Image Placeholder ]</span>
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="text-center max-w-2xl">
                                         <h4 className="text-2xl font-serif font-bold text-on-surface mb-4">{proj.title}</h4>
                                         <p className="text-on-surface-variant font-light text-lg mb-4">{proj.desc}</p>

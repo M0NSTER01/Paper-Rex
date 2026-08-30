@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { Save, ExternalLink, Settings, Briefcase, GraduationCap, User, Trophy, LayoutTemplate, Loader2, Monitor, Tablet, Smartphone, Code, Mail, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
+import { Save, ExternalLink, Settings, Briefcase, GraduationCap, User, Trophy, LayoutTemplate, Loader2, Monitor, Tablet, Smartphone, Code, Mail, Eye, EyeOff, Plus, Trash2, UploadCloud } from 'lucide-react';
 import MinimalistTemplate from '../components/templates/MinimalistTemplate';
 import ModernTemplate from '../components/templates/ModernTemplate';
 import DataDrivenTemplate from '../components/templates/DataDrivenTemplate';
@@ -33,6 +33,7 @@ export default function Editor() {
   const [completeness, setCompleteness] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -112,6 +113,8 @@ export default function Editor() {
         { theme, data },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     } catch (err) {
       console.error("Failed to save", err);
       alert("Failed to save changes");
@@ -206,7 +209,7 @@ export default function Editor() {
             </select>
           </div>
           <button onClick={handleSave} className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-md font-semibold text-sm hover:bg-gray-200 transition shadow-sm border border-gray-200">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4" />} Save
+            {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : saved ? <span className="text-green-600 font-bold">✓</span> : <Save className="w-4 h-4" />} {saved ? "Saved!" : "Save"}
           </button>
           <button onClick={handlePublish} className="flex items-center gap-2 bg-[var(--color-primary)] text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-[var(--color-secondary)] transition shadow-sm">
             <ExternalLink className="w-4 h-4" /> Publish
@@ -327,9 +330,48 @@ export default function Editor() {
                       const arr = [...data.projects];
                       arr.splice(idx, 1);
                       setData({...data, projects: arr});
-                    }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4"/></button>
-                    <input placeholder="Project Title" value={proj.title || ''} onChange={(e) => { const arr = [...data.projects]; arr[idx].title = e.target.value; setData({...data, projects: arr}) }} className="font-semibold text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
-                    <textarea placeholder="Description" rows="2" value={proj.desc || ''} onChange={(e) => { const arr = [...data.projects]; arr[idx].desc = e.target.value; setData({...data, projects: arr}) }} className="text-sm w-full outline-none mb-2 bg-transparent resize-none border-b border-dashed border-gray-300 focus:border-[var(--color-primary)]"></textarea>
+                    }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition z-10 bg-white rounded-md"><Trash2 className="w-4 h-4"/></button>
+                    
+                    <div className="flex gap-4 mb-3">
+                      {proj.image ? (
+                        <div className="relative w-20 h-20 rounded-md overflow-hidden bg-gray-200 shrink-0 group/img">
+                          <img src={proj.image} alt="Project" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                            <button onClick={() => {
+                              const arr = [...data.projects];
+                              delete arr[idx].image;
+                              setData({...data, projects: arr});
+                            }} className="text-white hover:text-red-400 p-1"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="w-20 h-20 rounded-md border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors shrink-0">
+                          <UploadCloud className="w-5 h-5 mb-1" />
+                          <span className="text-[10px] font-semibold text-center leading-tight">Project<br/>Image</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            if (!e.target.files || e.target.files.length === 0) return;
+                            const file = e.target.files[0];
+                            const formData = new FormData();
+                            formData.append('photo', file);
+                            try {
+                              const token = localStorage.getItem('token');
+                              const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/upload-image', formData, {
+                                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+                              });
+                              const arr = [...data.projects];
+                              arr[idx].image = res.data.photoUrl;
+                              setData({...data, projects: arr});
+                            } catch (err) {
+                              alert('Failed to upload project photo');
+                            }
+                          }} />
+                        </label>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <input placeholder="Project Title" value={proj.title || ''} onChange={(e) => { const arr = [...data.projects]; arr[idx].title = e.target.value; setData({...data, projects: arr}) }} className="font-semibold text-sm w-full outline-none mb-2 bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
+                        <textarea placeholder="Description" rows="2" value={proj.desc || ''} onChange={(e) => { const arr = [...data.projects]; arr[idx].desc = e.target.value; setData({...data, projects: arr}) }} className="text-sm w-full outline-none bg-transparent resize-none border-b border-dashed border-gray-300 focus:border-[var(--color-primary)]"></textarea>
+                      </div>
+                    </div>
                     <input placeholder="Technologies (comma separated)" value={(proj.tech || []).join(', ')} onChange={(e) => { const arr = [...data.projects]; arr[idx].tech = e.target.value.split(',').map(s=>s.trim()); setData({...data, projects: arr}) }} className="text-xs text-gray-500 w-full outline-none bg-transparent border-b border-dashed border-gray-300 focus:border-[var(--color-primary)] pb-1" />
                   </div>
                 ))}

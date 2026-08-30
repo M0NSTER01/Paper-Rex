@@ -71,8 +71,12 @@ export default function NeonCreativeTemplate({ data }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {(data?.projects || []).map((proj, index) => (
                             <div key={index} className="bg-surface-container-lowest brutal-border shadow-brutal flex flex-col group hover:-translate-y-2 transition-transform duration-300">
-                                <div className="h-48 bg-pink border-b-4 border-on-surface flex items-center justify-center relative overflow-hidden">
-                                    <span className="text-display font-display font-extrabold text-on-surface transform -rotate-12 opacity-50 absolute scale-150">{proj.title.substring(0, 10).toUpperCase()}</span>
+                                <div className="h-48 bg-pink border-b-4 border-on-surface flex items-center justify-center relative overflow-hidden group-hover:bg-primary transition-colors">
+                                    {proj.image ? (
+                                        <img src={proj.image} alt={proj.title} className="w-full h-full object-cover absolute inset-0 mix-blend-luminosity hover:mix-blend-normal transition-all" />
+                                    ) : (
+                                        <span className="text-display font-display font-extrabold text-on-surface transform -rotate-12 opacity-50 absolute scale-150">{proj.title.substring(0, 10).toUpperCase()}</span>
+                                    )}
                                 </div>
                                 <div className="p-6 md:p-8 flex-1 flex flex-col">
                                     <h3 className="text-headline-md font-headline-md font-extrabold text-on-surface mb-4 uppercase">{proj.title}</h3>
