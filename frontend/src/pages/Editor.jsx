@@ -246,7 +246,12 @@ export default function Editor() {
       });
 
       const url = 'https://' + res.data.liveUrl;
-      const updatedData = { ...data, liveUrl: url };
+      const newDeploy = { url, date: new Date().toISOString() };
+      const updatedData = { 
+        ...data, 
+        liveUrl: url,
+        deployments: [newDeploy, ...(data.deployments || [])]
+      };
       setData(updatedData);
       
       // Save to DB so Dashboard can show it

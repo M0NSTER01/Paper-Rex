@@ -237,6 +237,18 @@ app.put('/api/portfolios/:id', authenticateToken, async (req, res) => {
     }
 });
 
+
+// Delete Portfolio
+app.delete('/api/portfolios/:id', authenticateToken, async (req, res) => {
+    try {
+        await pool.query('DELETE FROM portfolios WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 app.post('/api/extract-resume', authenticateToken, upload.single('resume'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, LayoutTemplate, ExternalLink, Edit, MoreVertical, LogOut, UploadCloud, Loader2 } from 'lucide-react';
+import { Plus, LayoutTemplate, ExternalLink, Edit, MoreVertical, LogOut, UploadCloud, Loader2, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
 export default function Dashboard() {
@@ -35,6 +35,21 @@ export default function Dashboard() {
 
     fetchPortfolios(token);
   }, [navigate]);
+
+  
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this portfolio? This cannot be undone.")) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPortfolios(portfolios.filter(p => p.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete portfolio');
+    }
+  };
 
   const fetchPortfolios = async (token) => {
     try {
@@ -206,21 +221,49 @@ export default function Dashboard() {
                     </p>
                     
                     {portfolio.data?.liveUrl && (
-                      <div className="mb-4">
-                        <a href={portfolio.data.liveUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md hover:bg-blue-100 transition border border-blue-100">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                          Live on Netlify
-                        </a>
-                      </div>
-                    )}
+                        <div className="mb-4 space-y-2">
+                          <div className="flex items-center justify-between bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 group/latest">
+                            <a href={portfolio.data.liveUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 transition">
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                              Latest Deploy (Live on Netlify)
+                            </a>
+                            <button onClick={() => handleDeleteDeploy(portfolio.id, 0)} className="text-blue-300 hover:text-red-500 opacity-0 group-hover/latest:opacity-100 transition-opacity" title="Delete latest deploy link">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          
+                          {portfolio.data?.deployments && portfolio.data.deployments.length > 1 && (
+                            <div className="mt-2 text-xs text-gray-500">
+                              <p className="font-semibold mb-1">Previous Deploys:</p>
+                              <div className="max-h-24 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                {portfolio.data.deployments.slice(1).map((dep, i) => (
+                                    <div key={i} className="flex items-center justify-between group/dep">
+                                      <a href={dep.url} target="_blank" rel="noreferrer" className="block truncate text-gray-400 hover:text-blue-500 transition-colors" title={dep.url}>
+                                        {new Date(dep.date).toLocaleString()}
+                                      </a>
+                                      <button onClick={() => handleDeleteDeploy(portfolio.id, i + 1)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover/dep:opacity-100 transition-opacity" title="Delete this deploy link">
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                   
                   <div className="flex gap-2 mt-auto">
                     <Link to={`/editor?id=${portfolio.id}`} className="flex-1 flex justify-center items-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 py-2 rounded-md font-semibold text-sm transition">
                       <Edit className="w-4 h-4" /> Edit
                     </Link>
-                    <Link to={`/portfolio/${portfolio.id}`} className="flex-1 flex justify-center items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-secondary)] text-white py-2 rounded-md font-semibold text-sm transition shadow-sm">
-                      <ExternalLink className="w-4 h-4" /> View
-                    </Link>
+                    
+                      <Link to={`/portfolio/${portfolio.id}`} className="flex-1 flex justify-center items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-secondary)] text-white py-2 rounded-md font-semibold text-sm transition shadow-sm">
+                        <ExternalLink className="w-4 h-4" /> View
+                      </Link>
+                      <button onClick={() => handleDelete(portfolio.id)} className="flex justify-center items-center p-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-md transition" title="Delete Portfolio">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+
                   </div>
                 </div>
               </div>
