@@ -403,7 +403,17 @@ ${jobDescription}
     }
 });
 
+const setupSkillGapAnalysisRoute = require('./skillGapAnalysis');
+setupSkillGapAnalysisRoute(app, authenticateToken);
+
+const setupChatbotRoute = require('./chatbot');
+setupChatbotRoute(app);
+
+const setupCourseRecommendationsRoute = require('./courseRecommendations');
+setupCourseRecommendationsRoute(app, authenticateToken, pool);
+
 const PORT = 5000;
 server.listen(PORT, () => {
     console.log("Server is running on port " + PORT);
 });
+

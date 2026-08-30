@@ -8,6 +8,7 @@ import DataDrivenTemplate from '../components/templates/DataDrivenTemplate';
 import CleanAcademicTemplate from '../components/templates/CleanAcademicTemplate';
 import MidnightDeveloperTemplate from '../components/templates/MidnightDeveloperTemplate';
 import NeonCreativeTemplate from '../components/templates/NeonCreativeTemplate';
+import SkillGapAnalysis from '../components/SkillGapAnalysis';
 
 const DEFAULT_DATA = {
   intro: { name: '', title: '', summary: '' },
@@ -53,7 +54,7 @@ export default function Editor() {
     if (!portfolioId || loading || !data.intro?.name?.trim()) return;
     const timeoutId = setTimeout(() => {
       const token = localStorage.getItem('token');
-      axios.put(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`,
+      axios.put(`http://localhost:5000/api/portfolios/${portfolioId}`,
         { theme, data },
         { headers: { Authorization: `Bearer ${token}` } }
       ).catch(err => console.error('Autosave failed', err));
@@ -64,7 +65,7 @@ export default function Editor() {
   const fetchPortfolio = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${id}`, {
+      const res = await axios.get(`http://localhost:5000/api/portfolios/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.theme) setTheme(res.data.theme);
@@ -88,7 +89,7 @@ export default function Editor() {
     formData.append('photo', file);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/upload-image', formData, {
+      const res = await axios.post('http://localhost:5000/api/upload-image', formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -113,7 +114,7 @@ export default function Editor() {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`,
+      await axios.put(`http://localhost:5000/api/portfolios/${portfolioId}`,
         { theme, data },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -146,7 +147,7 @@ export default function Editor() {
     setEvaluatingAts(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/evaluate-ats', { data }, {
+      const res = await axios.post('http://localhost:5000/api/evaluate-ats', { data }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setData(prev => ({
@@ -257,6 +258,11 @@ export default function Editor() {
         {/* Left Panel - Form */}
         <div className="w-[450px] flex-shrink-0 flex flex-col border-r border-[var(--color-surface-dim)] bg-white overflow-y-auto z-20 shadow-sm relative">
           <div className="p-6 space-y-10 w-full pb-32">
+          
+            {/* Skill Gap Analysis */}
+            <div className="-mt-4">
+              <SkillGapAnalysis data={data} />
+            </div>
 
             {/* Intro Section */}
             <section>
@@ -389,7 +395,7 @@ export default function Editor() {
                             formData.append('photo', file);
                             try {
                               const token = localStorage.getItem('token');
-                              const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/upload-image', formData, {
+                              const res = await axios.post('http://localhost:5000/api/upload-image', formData, {
                                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
                               });
                               const arr = [...data.projects];
