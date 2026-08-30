@@ -38,7 +38,7 @@ export default function Dashboard() {
 
   const fetchPortfolios = async (token) => {
     try {
-      const res = await axios.get('http://localhost:5000/api/portfolios', {
+      const res = await axios.get('https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPortfolios(res.data);
@@ -58,20 +58,7 @@ export default function Dashboard() {
     navigate('/auth');
   };
 
-  const handleCreateNew = async (theme) => {
-    const token = localStorage.getItem('token');
-    try {
-      const res = await axios.post('http://localhost:5000/api/portfolios', 
-        { name: newPortfolioName || 'Untitled Portfolio', theme: theme || 'Minimalist' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      // Redirect to editor
-      navigate(`/editor?id=${res.data.id}`);
-    } catch (err) {
-      console.error(err);
-      alert('Error creating portfolio');
-    }
-  };
+  
 
   const handleDrag = useCallback((e) => {
     e.preventDefault();
@@ -80,21 +67,43 @@ export default function Dashboard() {
     else if (e.type === 'dragleave') setIsDragging(false);
   }, []);
 
-  const simulateExtraction = () => {
+
+  const [extractedData, setExtractedData] = useState(null);
+
+  const processFile = async (file) => {
+    if (!file) return;
     setModalStep('extracting');
-    let currentProgress = 0;
-    const interval = setInterval(() => {
-      currentProgress += Math.random() * 20;
-      if (currentProgress >= 100) {
-        clearInterval(interval);
-        setProgress(100);
-        setTimeout(() => {
-          setModalStep('theme');
-        }, 500);
-      } else {
-        setProgress(currentProgress);
-      }
-    }, 300);
+    setProgress(10);
+    
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      // Simulate progress while waiting
+      const interval = setInterval(() => {
+        setProgress(p => Math.min(p + 15, 90));
+      }, 500);
+
+      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/extract-resume', formData, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      clearInterval(interval);
+      setProgress(100);
+      setExtractedData(res.data);
+      
+      setTimeout(() => {
+        setModalStep('theme');
+      }, 800);
+    } catch (err) {
+      console.error("Extraction failed", err);
+      alert("Failed to extract data. Make sure the backend has a valid Gemini API Key.");
+      setShowNewModal(false);
+    }
   };
 
   const handleDrop = useCallback((e) => {
@@ -102,15 +111,40 @@ export default function Dashboard() {
     e.stopPropagation();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      simulateExtraction();
+      processFile(e.dataTransfer.files[0]);
     }
   }, []);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      simulateExtraction();
+      processFile(e.target.files[0]);
     }
   };
+
+  const handleCreateNew = async (theme) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios', 
+        { 
+          name: newPortfolioName || 'Untitled Portfolio', 
+          theme: theme || 'Minimalist',
+          data: extractedData 
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      navigate(`/editor?id=${res.data.id}`);
+    } catch (err) {
+      console.error(err);
+      alert('Error creating portfolio');
+    }
+  };
+
+
+  
+
+  
+
+  
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-[var(--color-surface)]"><Loader2 className="w-8 h-8 animate-spin text-[var(--color-primary)]" /></div>;
