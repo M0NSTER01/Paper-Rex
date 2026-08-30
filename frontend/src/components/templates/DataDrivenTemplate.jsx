@@ -1,4 +1,5 @@
 import React from 'react';
+import ContactForm from '../ContactForm';
 
 export default function DataDrivenTemplate({ data }) {
     return (
@@ -291,10 +292,15 @@ export default function DataDrivenTemplate({ data }) {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {(data?.projects || []).map((proj, index) => (
-                            <div key={index} className="bg-surface-container-lowest border border-outline rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <div key={index} className="bg-surface-container-lowest border border-outline rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-4 overflow-hidden relative">
+                                {proj.image && (
+                                    <div className="w-full h-48 -mt-6 -mx-6 mb-0 relative">
+                                        <img src={proj.image} alt={proj.title} className="w-full h-full object-cover" />
+                                    </div>
+                                )}
                                 <h4 className="text-headline-md text-on-surface mb-2">{proj.title}</h4>
                                 <p className="text-body-md text-on-surface-variant mb-4">{proj.desc}</p>
-                                <div className="flex gap-2 mb-4 flex-wrap">
+                                <div className="flex gap-2 mb-4 flex-wrap mt-auto">
                                     {(proj.tech || []).map((t, i) => (
                                         <span key={i} className="px-2 py-1 text-xs bg-surface-variant rounded text-on-surface">{t}</span>
                                     ))}
@@ -335,9 +341,7 @@ export default function DataDrivenTemplate({ data }) {
                         <div className="bg-surface-container-lowest border border-outline rounded-xl p-8 shadow-sm text-center">
                             <h4 className="text-headline-md text-on-surface mb-4">Let's Connect</h4>
                             <p className="text-body-md text-on-surface-variant mb-6 max-w-lg mx-auto">I'm currently open to new opportunities. Whether you have a question or just want to say hi, I'll try my best to get back to you!</p>
-                            <a className="inline-flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-xl hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-md" href="mailto:alex@example.com">
-                                <span className="material-symbols-outlined">send</span> Send Message
-                            </a>
+                            <ContactForm toEmail={data?.contact?.email} />
                         </div>
                     </section>
 

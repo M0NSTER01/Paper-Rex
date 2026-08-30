@@ -93,6 +93,43 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+app.post('/api/auth/google', async (req, res) => {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: "Missing Google token" });
+
+    try {
+        const ticket = await googleClient.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+        const payload = ticket.getPayload();
+        const { email, name } = payload;
+
+        // Check if user exists
+        const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+        let userId;
+
+        if (rows.length === 0) {
+            // Create user
+            const dummyPassword = await bcrypt.hash(Math.random().toString(36), 10);
+            const sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
+            const [result] = await pool.query(sql, [name, email, dummyPassword]);
+            userId = result.insertId;
+        } else {
+            userId = rows[0].id;
+        }
+
+        const jwtToken = jwt.sign({ id: userId, email }, JWT_SECRET, { expiresIn: '1d' });
+        res.json({ token: jwtToken, user: { id: userId, name, email } });
+    } catch (err) {
+        console.error("Google auth error:", err);
+        res.status(500).json({ error: "Google authentication failed" });
+    }
+});
+
 // Auth Middleware
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -219,6 +256,40 @@ app.post('/api/extract-resume', authenticateToken, upload.single('resume'), asyn
     } catch (err) {
         console.error("Extraction error:", err);
         res.status(500).json({ error: "Error extracting resume data" });
+    }
+});
+
+const nodemailer = require('nodemailer');
+
+app.post('/api/contact', async (req, res) => {
+    const { name, email, message, toEmail } = req.body;
+    
+    if (!name || !email || !message || !toEmail) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: toEmail,
+            subject: `New Portfolio Message from ${name}`,
+            text: `You have received a new message from your portfolio website.\n\nName: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+            replyTo: email
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.json({ success: true, message: "Email sent successfully" });
+    } catch (err) {
+        console.error("Email error:", err);
+        res.status(500).json({ error: "Failed to send email" });
     }
 });
 

@@ -105,7 +105,11 @@ export default function Editor() {
   };
 
   const handleSave = async () => {
-    if (!portfolioId) return;
+    if (!data.intro?.name?.trim() || !data.contact?.email?.trim() || !data.intro?.title?.trim()) {
+      alert("Mandatory Fields Missing:\nPlease ensure your Full Name, Professional Title, and Contact Email are filled in before saving.");
+      return false;
+    }
+    if (!portfolioId) return false;
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
@@ -138,8 +142,10 @@ export default function Editor() {
   };
 
   const handlePublish = () => {
-    handleSave().then(() => {
-      navigate(`/portfolio/${portfolioId || 'demo'}`);
+    handleSave().then((success) => {
+      if (success !== false) {
+        navigate(`/portfolio/${portfolioId || 'demo'}`);
+      }
     });
   };
 
@@ -247,11 +253,11 @@ export default function Editor() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Full Name</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Full Name <span className="text-red-500">*</span></label>
                   <input type="text" value={data.intro?.name || ''} onChange={(e) => setData({...data, intro: {...data.intro, name: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Professional Title</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Professional Title <span className="text-red-500">*</span></label>
                   <input type="text" value={data.intro?.title || ''} onChange={(e) => setData({...data, intro: {...data.intro, title: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
                 </div>
                 <div>
@@ -408,7 +414,7 @@ export default function Editor() {
               <SectionHeader icon={Mail} title="Contact Info" />
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Email</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Email <span className="text-red-500">*</span></label>
                   <input type="email" value={data.contact?.email || ''} onChange={(e) => setData({...data, contact: {...data.contact, email: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
                 </div>
                 <div>

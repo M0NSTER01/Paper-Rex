@@ -1,4 +1,5 @@
 import React from 'react';
+import ContactForm from '../ContactForm';
 
 export default function ModernTemplate({ data }) {
     return (
@@ -338,10 +339,7 @@ export default function ModernTemplate({ data }) {
                     <div className="bento-card p-8 md:p-12 text-center flex flex-col items-center justify-center max-w-3xl mx-auto bg-surface-container-low">
                         <h4 className="text-headline-md font-headline-md text-on-surface mb-4">Let's build something great together.</h4>
                         <p className="text-body-lg font-body-lg text-on-surface-variant mb-8">I'm currently open for new opportunities. Whether you have a question or just want to say hi, I'll try my best to get back to you!</p>
-                        <a className="px-8 py-4 rounded-xl bg-primary text-on-primary text-label-md font-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-lg flex items-center gap-2" href="mailto:hello@example.com">
-                            <span className="material-symbols-outlined">send</span>
-                            Say Hello
-                        </a>
+                        <div className="w-full text-left mt-8"><ContactForm toEmail={data?.contact?.email} /></div>
                     </div>
                 </section>
             </main>

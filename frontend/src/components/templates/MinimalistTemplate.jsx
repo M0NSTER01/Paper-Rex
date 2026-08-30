@@ -1,4 +1,5 @@
 import React from 'react';
+import ContactForm from '../ContactForm';
 
 export default function MinimalistTemplate({ data }) {
     return (
@@ -232,15 +233,11 @@ export default function MinimalistTemplate({ data }) {
                         <div className="space-y-32">
                             {(data?.projects || []).map((proj, index) => (
                                 <div key={index} className="flex flex-col items-center gap-8">
-                                    <div className="w-full aspect-[16/9] bg-surface-container-high rounded-sm overflow-hidden shadow-lg border border-surface-variant relative group">
-                                        {proj.image ? (
+                                    {proj.image && (
+                                        <div className="w-full aspect-[16/9] bg-surface-container-high rounded-sm overflow-hidden shadow-lg border border-surface-variant relative group">
                                             <img src={proj.image} alt={proj.title} className="w-full h-full object-cover absolute inset-0" />
-                                        ) : (
-                                            <div className="absolute inset-0 bg-primary/5 flex items-center justify-center">
-                                                <span className="text-on-surface-variant font-serif italic text-lg">[ High-Resolution Project Image Placeholder ]</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
                                     <div className="text-center max-w-2xl">
                                         <h4 className="text-2xl font-serif font-bold text-on-surface mb-4">{proj.title}</h4>
                                         <p className="text-on-surface-variant font-light text-lg mb-4">{proj.desc}</p>
@@ -291,23 +288,7 @@ export default function MinimalistTemplate({ data }) {
                             <div className="w-12 h-1 bg-primary mx-auto mt-6"></div>
                             <p className="text-on-surface-variant font-light mt-6">Currently open for new opportunities. Whether you have a question or just want to say hi, I'll try my best to get back to you!</p>
                         </div>
-                        <form className="bg-surface p-8 md:p-12 rounded-2xl border border-surface-variant shadow-sm max-w-2xl mx-auto space-y-6">
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="name">Name</label>
-                                    <input className="w-full px-4 py-3 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface" id="name" placeholder="John Doe" type="text" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="email">Email</label>
-                                    <input className="w-full px-4 py-3 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface" id="email" placeholder="john@example.com" type="email" />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="message">Message</label>
-                                <textarea className="w-full px-4 py-3 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface resize-none" id="message" placeholder="Hello..." rows="5"></textarea>
-                            </div>
-                            <button className="w-full py-4 bg-primary text-on-primary font-medium rounded-lg hover:bg-primary/90 transition-colors shadow-sm" type="button">Send Message</button>
-                        </form>
+                        <div className="bg-surface p-8 md:p-12 rounded-2xl border border-surface-variant shadow-sm max-w-2xl mx-auto"><ContactForm toEmail={data?.contact?.email} /></div>
                     </div>
                 </section>
             </main>

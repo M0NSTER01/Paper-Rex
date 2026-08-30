@@ -1,4 +1,5 @@
 import React from 'react';
+import ContactForm from '../ContactForm';
 
 export default function MidnightDeveloperTemplate({ data }) {
     return (
@@ -274,10 +275,15 @@ export default function MidnightDeveloperTemplate({ data }) {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {(data?.projects || []).map((proj, index) => (
-                                <article key={index} className="terminal-card rounded-lg overflow-hidden p-6 hover:border-neon transition-colors">
+                                <article key={index} className="terminal-card rounded-lg overflow-hidden p-6 hover:border-neon transition-colors flex flex-col gap-4">
+                                    {proj.image && (
+                                        <div className="w-full h-48 -mt-6 -mx-6 mb-0 relative border-b border-[#1e293b]">
+                                            <img src={proj.image} alt={proj.title} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity mix-blend-screen grayscale hover:grayscale-0" />
+                                        </div>
+                                    )}
                                     <h3 className="text-lg font-mono text-white font-semibold mb-2">{proj.title}</h3>
                                     <p className="text-sm font-body-md text-slate-400 mb-4">{proj.desc}</p>
-                                    <div className="flex gap-2 font-mono text-xs text-neon flex-wrap">
+                                    <div className="flex gap-2 font-mono text-xs text-neon flex-wrap mt-auto">
                                         {(proj.tech || []).map((t, i) => (
                                             <span key={i}>#{t}</span>
                                         ))}
@@ -318,9 +324,7 @@ export default function MidnightDeveloperTemplate({ data }) {
                         <div className="terminal-card rounded-lg overflow-hidden p-8 text-center">
                             <h3 className="text-xl font-mono text-white mb-4">Ready to initialize connection?</h3>
                             <p className="text-slate-400 font-body-md mb-6 max-w-lg mx-auto">Currently open for new opportunities. Whether you have a question or just want to say hi, I'll try my best to get back to you!</p>
-                            <a className="inline-block border border-neon text-neon hover:bg-neon hover:text-black px-8 py-3 rounded-md font-mono transition-colors" href="mailto:hello@midnightdeveloper.com">
-                                $ ping mailto:hello
-                            </a>
+                            <div className="w-full text-left mt-8"><ContactForm toEmail={data?.contact?.email} /></div>
                         </div>
                     </section>
 

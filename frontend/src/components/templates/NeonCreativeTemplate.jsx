@@ -1,4 +1,5 @@
 import React from 'react';
+import ContactForm from '../ContactForm';
 
 export default function NeonCreativeTemplate({ data }) {
     return (
@@ -71,13 +72,11 @@ export default function NeonCreativeTemplate({ data }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {(data?.projects || []).map((proj, index) => (
                             <div key={index} className="bg-surface-container-lowest brutal-border shadow-brutal flex flex-col group hover:-translate-y-2 transition-transform duration-300">
-                                <div className="h-48 bg-pink border-b-4 border-on-surface flex items-center justify-center relative overflow-hidden group-hover:bg-primary transition-colors">
-                                    {proj.image ? (
+                                {proj.image && (
+                                    <div className="h-48 bg-pink border-b-4 border-on-surface flex items-center justify-center relative overflow-hidden group-hover:bg-primary transition-colors">
                                         <img src={proj.image} alt={proj.title} className="w-full h-full object-cover absolute inset-0 mix-blend-luminosity hover:mix-blend-normal transition-all" />
-                                    ) : (
-                                        <span className="text-display font-display font-extrabold text-on-surface transform -rotate-12 opacity-50 absolute scale-150">{proj.title.substring(0, 10).toUpperCase()}</span>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                                 <div className="p-6 md:p-8 flex-1 flex flex-col">
                                     <h3 className="text-headline-md font-headline-md font-extrabold text-on-surface mb-4 uppercase">{proj.title}</h3>
                                     <p className="text-body-md font-bold text-on-surface-variant mb-6">{proj.desc}</p>
@@ -310,14 +309,7 @@ export default function NeonCreativeTemplate({ data }) {
                             <div className="max-w-2xl mx-auto text-center">
                                 <h2 className="text-display font-display font-extrabold uppercase mb-6">Let's Talk</h2>
                                 <p className="text-body-lg mb-8 font-medium">Currently open for new opportunities or freelance projects. Send me a message and I'll get back to you soon.</p>
-                                <div className="flex flex-col sm:flex-row justify-center gap-4">
-                                    <a className="bg-amber text-on-surface brutal-border px-8 py-4 text-headline-md font-extrabold uppercase sticker inline-flex items-center justify-center gap-2" href="mailto:hello@example.com">
-                                        <span className="material-symbols-outlined">mail</span> Email Me
-                                    </a>
-                                    <a className="bg-surface-container-lowest text-on-surface brutal-border px-8 py-4 text-headline-md font-extrabold uppercase sticker inline-flex items-center justify-center gap-2" href="#">
-                                        <span className="material-symbols-outlined">link</span> LinkedIn
-                                    </a>
-                                </div>
+                                <div className="w-full text-left"><ContactForm toEmail={data?.contact?.email} /></div>
                             </div>
                         </div>
                     </section>
