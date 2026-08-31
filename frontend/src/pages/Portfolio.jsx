@@ -6,7 +6,6 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import MinimalistTemplate from '../components/templates/MinimalistTemplate';
 import ModernTemplate from '../components/templates/ModernTemplate';
 import DataDrivenTemplate from '../components/templates/DataDrivenTemplate';
-import CleanAcademicTemplate from '../components/templates/CleanAcademicTemplate';
 import MidnightDeveloperTemplate from '../components/templates/MidnightDeveloperTemplate';
 import NeonCreativeTemplate from '../components/templates/NeonCreativeTemplate';
 
@@ -66,7 +65,6 @@ export default function Portfolio() {
     switch (theme) {
       case 'Modern': return <ModernTemplate data={data} />;
       case 'Data Driven': return <DataDrivenTemplate data={data} />;
-      case 'Clean Academic': return <CleanAcademicTemplate data={data} />;
       case 'Midnight Developer': return <MidnightDeveloperTemplate data={data} />;
       case 'Neon Creative': return <NeonCreativeTemplate data={data} />;
       case 'Minimalist':

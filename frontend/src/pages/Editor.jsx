@@ -6,7 +6,6 @@ import { Copy, Share2, Save, ExternalLink, Settings, Briefcase, GraduationCap, U
 import MinimalistTemplate from '../components/templates/MinimalistTemplate';
 import ModernTemplate from '../components/templates/ModernTemplate';
 import DataDrivenTemplate from '../components/templates/DataDrivenTemplate';
-import CleanAcademicTemplate from '../components/templates/CleanAcademicTemplate';
 import MidnightDeveloperTemplate from '../components/templates/MidnightDeveloperTemplate';
 import NeonCreativeTemplate from '../components/templates/NeonCreativeTemplate';
 import SkillGapAnalysis from '../components/SkillGapAnalysis';
@@ -410,7 +409,6 @@ export default function Editor() {
     switch (theme) {
       case 'Modern': return <ModernTemplate data={data} />;
       case 'Data Driven': return <DataDrivenTemplate data={data} />;
-      case 'Clean Academic': return <CleanAcademicTemplate data={data} />;
       case 'Midnight Developer': return <MidnightDeveloperTemplate data={data} />;
       case 'Neon Creative': return <NeonCreativeTemplate data={data} />;
       case 'Minimalist':
@@ -471,7 +469,6 @@ export default function Editor() {
               <option value="Minimalist">Minimalist</option>
               <option value="Modern">Modern</option>
               <option value="Data Driven">Data Driven</option>
-              <option value="Clean Academic">Clean Academic</option>
               <option value="Midnight Developer">Midnight Developer</option>
               <option value="Neon Creative">Neon Creative</option>
             </select>

@@ -372,7 +372,7 @@ export default function Dashboard() {
                 <p className="text-gray-500 mb-8">Select a starting theme for your web portfolio. You can change this later.</p>
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8 text-left">
-                  {['Minimalist', 'Modern', 'Data Driven', 'Clean Academic', 'Midnight Developer', 'Neon Creative'].map(t => (
+                  {['Minimalist', 'Modern', 'Data Driven', 'Midnight Developer', 'Neon Creative'].map(t => (
                     <div 
                       key={t}
                       onClick={() => setSelectedTheme(t)}
