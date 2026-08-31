@@ -180,7 +180,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[var(--color-surface)] flex flex-col">
       <header className="py-4 px-8 border-b border-[var(--color-surface-dim)] bg-white flex justify-between items-center shadow-sm">
-        <h1 className="text-2xl font-bold font-geist text-[var(--color-primary)]">SecondLife Resume</h1>
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="Paper Rex Logo" className="h-8 object-contain" />
+          <h1 className="text-2xl font-bold font-geist text-[var(--color-primary)]">Paper Rex</h1>
+        </div>
         <div className="flex items-center gap-4">
           <span className="text-sm font-semibold text-gray-700 font-inter">{user?.name}</span>
           <button onClick={handleLogout} className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition" title="Logout">
