@@ -428,7 +428,10 @@ export default function Dashboard() {
         )}
 
 
-      <Chatbot />
+      <Chatbot 
+        title="Paper Rex Support" 
+        welcomeMessage="Hi! Need help with your dashboard or portfolios?" 
+      />
     </div>
   );
 }

@@ -45,7 +45,7 @@ function setupCourseRecommendationsRoute(app, authenticateToken, pool) {
             // 2. Fetch new recommendations using purely Gemini 1.5 Flash.
             const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
             const model = genAI.getGenerativeModel({
-                model: "gemini-3.1-flash-lite",
+                model: "gemini-3.5-flash-lite",
                 generationConfig: { responseMimeType: "application/json" }
             });
 

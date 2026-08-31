@@ -11,6 +11,8 @@ import MidnightDeveloperTemplate from '../components/templates/MidnightDeveloper
 import NeonCreativeTemplate from '../components/templates/NeonCreativeTemplate';
 
 
+import Chatbot from '../components/Chatbot';
+
 export default function Portfolio() {
   const { id } = useParams();
   const [theme, setTheme] = useState('Minimalist');
@@ -86,6 +88,15 @@ export default function Portfolio() {
       
       {/* Full Screen Template Render */}
       {renderTemplate()}
+
+      {/* Portfolio AI (Answers questions about the user's resume) */}
+      <Chatbot 
+        context={data} 
+        title="Ask AI" 
+        welcomeMessage={`Hi! Ask me anything about ${data.intro?.name || 'this portfolio'}!`} 
+        hideFab={true} 
+        triggerEvent="open-ai-chat" 
+      />
     </div>
   );
 }

@@ -3,10 +3,16 @@ import axios from 'axios';
 import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-export default function Chatbot() {
+export default function Chatbot({ 
+  context, 
+  title = "AI Assistant", 
+  welcomeMessage = "Hi there! I am the Paper Rex AI Assistant. How can I help you with your resume or portfolio today?", 
+  hideFab = false,
+  triggerEvent = null 
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'model', parts: [{ text: 'Hi there! I am the SecondLife AI Assistant. How can I help you with your resume or portfolio today?' }] }
+    { role: 'model', parts: [{ text: welcomeMessage }] }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,6 +28,13 @@ export default function Chatbot() {
     }
   }, [messages, isOpen]);
 
+  useEffect(() => {
+    if (!triggerEvent) return;
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener(triggerEvent, handleOpen);
+    return () => window.removeEventListener(triggerEvent, handleOpen);
+  }, [triggerEvent]);
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
@@ -34,12 +47,12 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      // Use localhost to avoid DevTunnels CORS issues
       const API_BASE = import.meta.env.VITE_BACKEND_URL;
       
       const res = await axios.post(`${API_BASE}/api/chat`, {
         message: userMessage,
-        history: messages // Pass everything before the new user message as history
+        history: messages,
+        context: context
       });
 
       setMessages([...newMessages, { role: 'model', parts: [{ text: res.data.response }] }]);
@@ -54,12 +67,14 @@ export default function Chatbot() {
   return (
     <>
       {/* Floating Action Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 w-14 h-14 bg-[var(--color-primary)] text-white rounded-full shadow-lg hover:shadow-xl hover:bg-[var(--color-secondary)] transition-all flex items-center justify-center z-50 ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
-      >
-        <MessageCircle className="w-6 h-6" />
-      </button>
+      {!hideFab && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className={`fixed bottom-6 right-6 w-14 h-14 bg-[var(--color-primary)] text-white rounded-full shadow-lg hover:shadow-xl hover:bg-[var(--color-secondary)] transition-all flex items-center justify-center z-50 ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
+        >
+          <MessageCircle className="w-6 h-6" />
+        </button>
+      )}
 
       {/* Chat Window */}
       <div className={`fixed bottom-6 right-6 w-96 sm:w-[460px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col z-50 overflow-hidden transition-all duration-300 origin-bottom-right ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`} style={{ height: '600px', maxHeight: '85vh' }}>
@@ -68,7 +83,7 @@ export default function Chatbot() {
         <div className="bg-[var(--color-primary)] p-4 flex items-center justify-between text-white shrink-0">
           <div className="flex items-center gap-2">
             <Bot className="w-5 h-5" />
-            <span className="font-semibold font-geist">AI Assistant</span>
+            <span className="font-semibold font-geist">{title}</span>
           </div>
           <button onClick={() => setIsOpen(false)} className="text-white hover:text-gray-200 transition">
             <X className="w-5 h-5" />

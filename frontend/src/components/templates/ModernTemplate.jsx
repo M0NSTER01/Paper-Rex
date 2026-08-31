@@ -345,7 +345,7 @@ export default function ModernTemplate({ data }) {
             </main>
 
             {/* Floating AI Widget - Branded FAB */}
-            <button className="fixed bottom-32 md:bottom-24 right-6 md:right-10 w-16 h-16 bg-secondary text-on-secondary rounded-xl shadow-xl shadow-secondary/30 hover:shadow-2xl hover:shadow-secondary/40 hover:-translate-y-1 transition-all flex items-center justify-center z-40 group">
+            <button onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))} className="ai-chat-trigger fixed bottom-32 md:bottom-24 right-6 md:right-10 w-16 h-16 bg-secondary text-on-secondary rounded-xl shadow-xl shadow-secondary/30 hover:shadow-2xl hover:shadow-secondary/40 hover:-translate-y-1 transition-all flex items-center justify-center z-40 group">
                 <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
                 <span className="absolute right-20 bg-surface-container-high text-on-surface text-label-md font-label-md px-5 py-3 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-outline-variant">Ask My Portfolio</span>
             </button>

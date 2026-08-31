@@ -21,7 +21,7 @@ export default function MinimalistTemplate({ data }) {
                 <div className="flex items-center gap-6">
                     
                     {/* Integrated AI Widget */}
-                    <button className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2 rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all text-sm font-medium">
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))} className="ai-chat-trigger flex items-center gap-2 bg-primary text-on-primary px-5 py-2 rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all text-sm font-medium">
                         <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
                         <span className="hidden sm:inline">Ask AI</span>
                     </button>
