@@ -21,7 +21,7 @@ export default function CourseRecommendations({ gaps, portfolioId }) {
     try {
       const token = localStorage.getItem('token');
       // Using localhost to avoid DevTunnels CORS issues
-      const API_BASE = 'http://localhost:5000';
+      const API_BASE = import.meta.env.VITE_BACKEND_URL;
       
       const res = await axios.post(`${API_BASE}/api/recommend-courses`, 
         { gaps, portfolio_id: portfolioId }, 

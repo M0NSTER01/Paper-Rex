@@ -9,6 +9,8 @@ import DataDrivenTemplate from '../components/templates/DataDrivenTemplate';
 import CleanAcademicTemplate from '../components/templates/CleanAcademicTemplate';
 import MidnightDeveloperTemplate from '../components/templates/MidnightDeveloperTemplate';
 import NeonCreativeTemplate from '../components/templates/NeonCreativeTemplate';
+import SkillGapAnalysis from '../components/SkillGapAnalysis';
+import Chatbot from '../components/Chatbot';
 
 const DEFAULT_DATA = {
   intro: { name: '', title: '', summary: '' },
@@ -583,11 +585,14 @@ export default function Editor() {
                   <input type="text" value={data.contact?.github || ''} onChange={(e) => setData({...data, contact: {...data.contact, github: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
                 </div>
               </div>
-            </section>
+              </section>
 
+              {/* Skill Gap Analysis */}
+              <SkillGapAnalysis data={data} />
+  
+            </div>
           </div>
-        </div>
-
+  
         {/* Right Panel - Live Preview */}
         <div className="flex-1 bg-gray-100 flex items-center justify-center p-4 overflow-hidden relative">
           <div className="w-full h-full flex justify-center overflow-auto items-start pt-4 pb-12">
@@ -668,6 +673,7 @@ export default function Editor() {
         </div>
       )}
 
+      <Chatbot />
     </div>
   );
 }

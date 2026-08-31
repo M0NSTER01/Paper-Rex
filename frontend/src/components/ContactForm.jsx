@@ -13,7 +13,7 @@ export default function ContactForm({ toEmail, className = "" }) {
         }
         setStatus('loading');
         try {
-            await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/contact', {
+            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/contact`, {
                 ...formData,
                 toEmail
             });

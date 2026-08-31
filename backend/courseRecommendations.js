@@ -1,5 +1,4 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const axios = require("axios");
 
 function setupCourseRecommendationsRoute(app, authenticateToken, pool) {
     app.post('/api/recommend-courses', authenticateToken, async (req, res) => {
@@ -43,94 +42,59 @@ function setupCourseRecommendationsRoute(app, authenticateToken, pool) {
                 }
             }
 
-            // 2. We need to fetch new recommendations.
-
+            // 2. Fetch new recommendations using purely Gemini 1.5 Flash.
             const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
             const model = genAI.getGenerativeModel({
                 model: "gemini-3.1-flash-lite",
                 generationConfig: { responseMimeType: "application/json" }
             });
 
-            const tavilyApiKey = process.env.TAVILY_API_KEY;
-            const finalRecommendations = [];
+            const prompt = `You are a Career Expert helping a candidate address their skill gaps by recommending real-world online courses.
 
-            // 3. For each gap, call Tavily and then Gemini
-            for (const gap of prioritizedGaps) {
-                try {
-                    // Tavily API Call
-                    const tavilyRes = await axios.post("https://api.tavily.com/search", {
-                        api_key: tavilyApiKey,
-                        query: `best online course for ${gap.skill} 2026`,
-                        max_results: 5,
-                        include_answer: false
-                    });
+Here are their top skill gaps:
+${JSON.stringify(prioritizedGaps, null, 2)}
 
-                    const searchResults = tavilyRes.data.results || [];
-
-                    if (searchResults.length === 0) {
-                        finalRecommendations.push({
-                            skill: gap.skill,
-                            importance: gap.importance,
-                            courses: []
-                        });
-                        continue;
-                    }
-
-                    // Gemini Synthesis Call
-                    const prompt = `You are a Career Expert helping a candidate address a skill gap.
-Skill: ${gap.skill}
-Why it's needed: ${gap.reason}
-
-Raw Search Results:
-${JSON.stringify(searchResults, null, 2)}
-
-Select and summarize the 2-3 most relevant courses from the search results to help them learn this skill.
-CRITICAL CONSTRAINTS:
-1. ONLY use titles and URLs that appear VERBATIM in the provided search results.
-2. NEVER invent, modify, or guess a course name or URL. 
-3. If no good match exists in the results, return an empty courses array for that skill.
-4. Provide a very brief (1 sentence) 'why_relevant' explanation for each selected course.
+For each skill gap, recommend 2 high-quality, highly popular, and well-known online courses (e.g. from Coursera, Udemy, edX, Codecademy). 
+Use your internal knowledge to provide the most accurate real course names and realistic URLs (e.g. https://www.coursera.org/...).
+Provide a very brief (1 sentence) 'why_relevant' explanation for each selected course.
 
 Return ONLY a valid JSON object strictly matching this schema:
 {
-  "skill": "${gap.skill}",
-  "courses": [
+  "recommendations": [
     {
-      "title": "string (VERBATIM from search)",
-      "url": "string (VERBATIM from search)",
-      "why_relevant": "string"
+      "skill": "skill_name",
+      "importance": "high/medium/low",
+      "courses": [
+        {
+          "title": "string",
+          "url": "string",
+          "why_relevant": "string"
+        }
+      ]
     }
   ]
 }
 Do not wrap the output in markdown code blocks.`;
 
-                    const result = await model.generateContent(prompt);
-                    let jsonStr = result.response.text().trim();
+            const result = await model.generateContent(prompt);
+            let jsonStr = result.response.text().trim();
 
-                    if (jsonStr.startsWith('\`\`\`json')) {
-                        jsonStr = jsonStr.replace(/^\`\`\`json\n/, '').replace(/\n\`\`\`$/, '');
-                    } else if (jsonStr.startsWith('\`\`\`')) {
-                        jsonStr = jsonStr.replace(/^\`\`\`\n/, '').replace(/\n\`\`\`$/, '');
-                    }
-
-                    const parsed = JSON.parse(jsonStr);
-
-                    finalRecommendations.push({
-                        skill: gap.skill,
-                        importance: gap.importance,
-                        courses: parsed.courses || []
-                    });
-
-                } catch (err) {
-                    console.error(`Failed to fetch recommendations for skill ${gap.skill}:`, err.message);
-                    // Skip and continue
-                    finalRecommendations.push({
-                        skill: gap.skill,
-                        importance: gap.importance,
-                        courses: []
-                    });
-                }
+            if (jsonStr.startsWith('\`\`\`json')) {
+                jsonStr = jsonStr.replace(/^\`\`\`json\n/, '').replace(/\n\`\`\`$/, '');
+            } else if (jsonStr.startsWith('\`\`\`')) {
+                jsonStr = jsonStr.replace(/^\`\`\`\n/, '').replace(/\n\`\`\`$/, '');
             }
+
+            const parsed = JSON.parse(jsonStr);
+
+            // Ensure importance is preserved correctly
+            const finalRecommendations = parsed.recommendations.map(r => {
+                const originalGap = prioritizedGaps.find(g => g.skill === r.skill);
+                return {
+                    ...r,
+                    importance: originalGap ? originalGap.importance : r.importance
+                };
+            });
 
             const responseData = { recommendations: finalRecommendations };
 

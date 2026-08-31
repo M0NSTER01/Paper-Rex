@@ -10,7 +10,7 @@ import {
 import ATSClassicTemplate from '../components/templates/ATSClassicTemplate';
 import ModernTechTemplate from '../components/templates/ModernTechTemplate';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_BACKEND_URL;
 
 export default function CreateResume() {
   const navigate = useNavigate();

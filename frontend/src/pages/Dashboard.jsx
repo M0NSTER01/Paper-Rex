@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Plus, LayoutTemplate, ExternalLink, Edit, MoreVertical, LogOut, UploadCloud, Loader2, Trash2, Share2, Copy } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import Chatbot from '../components/Chatbot';
 import axios from 'axios';
 
 export default function Dashboard() {
@@ -52,7 +53,7 @@ export default function Dashboard() {
     if (!window.confirm("Are you sure you want to delete this portfolio? This cannot be undone.")) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/portfolios/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPortfolios(portfolios.filter(p => p.id !== id));
@@ -64,7 +65,7 @@ export default function Dashboard() {
 
   const fetchPortfolios = async (token) => {
     try {
-      const res = await axios.get('https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios', {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/portfolios`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPortfolios(res.data);
@@ -111,7 +112,7 @@ export default function Dashboard() {
         setProgress(p => Math.min(p + 15, 90));
       }, 500);
 
-      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/extract-resume', formData, {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/extract-resume`, formData, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -150,7 +151,7 @@ export default function Dashboard() {
   const handleCreateNew = async (theme) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios', 
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/portfolios`, 
         { 
           name: newPortfolioName || 'Untitled Portfolio', 
           theme: theme || 'Minimalist',
@@ -423,6 +424,8 @@ export default function Dashboard() {
           </div>
         )}
 
+
+      <Chatbot />
     </div>
   );
 }

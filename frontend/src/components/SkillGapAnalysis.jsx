@@ -21,7 +21,7 @@ export default function SkillGapAnalysis({ data }) {
       const token = localStorage.getItem('token');
       // Use standard relative path if you have a proxy or the base URL directly if available.
       // Based on Editor.jsx it uses http://localhost:5000 as base URL
-      const res = await axios.post('http://localhost:5000/api/analyze-skill-gaps', 
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/analyze-skill-gaps`, 
         { data, jobDescription }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
