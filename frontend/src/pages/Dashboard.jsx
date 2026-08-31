@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, LayoutTemplate, ExternalLink, Edit, MoreVertical, LogOut, UploadCloud, Loader2, Trash2, Share2, Copy } from 'lucide-react';
+import { Plus, LayoutTemplate, ExternalLink, Edit, MoreVertical, LogOut, UploadCloud, Loader2, Trash2, Share2, Copy, Edit2, FileText, Globe, CheckCircle } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import Chatbot from '../components/Chatbot';
 import axios from 'axios';
+import ExamplePortfolios from '../components/ExamplePortfolios';
 
 export default function Dashboard() {
   const [portfolios, setPortfolios] = useState([]);
@@ -303,6 +304,10 @@ export default function Dashboard() {
             ))}
           </div>
         )}
+
+        <div className="mt-24">
+          <ExamplePortfolios />
+        </div>
       </main>
 
       {/* New Portfolio Modal */}

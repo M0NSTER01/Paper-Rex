@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FileText, Zap, BarChart3 } from 'lucide-react';
+import ExamplePortfolios from '../components/ExamplePortfolios';
 
 export default function Landing() {
   return (
@@ -42,6 +43,7 @@ export default function Landing() {
             <p className="text-[var(--color-on-surface)] opacity-70">Track views, unique visitors, and see exactly when and where your portfolio is being viewed.</p>
           </div>
         </div>
+        <ExamplePortfolios />
       </main>
     </div>
   );
