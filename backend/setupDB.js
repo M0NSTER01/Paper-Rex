@@ -7,7 +7,7 @@ async function setup() {
         const con = await mysql.createConnection({
             host: "localhost",
             user: "root",
-            password: "YOUR_DB_PASSWORD"
+            password: "root"
         });
 
         await con.query("CREATE DATABASE IF NOT EXISTS secondlife_resume");
@@ -18,7 +18,7 @@ async function setup() {
         const pool = mysql.createPool({
             host: "localhost",
             user: "root",
-            password: "YOUR_DB_PASSWORD",
+            password: "root",
             database: "secondlife_resume"
         });
 

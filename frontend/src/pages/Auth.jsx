@@ -30,7 +30,7 @@ export default function Auth() {
     const endpoint = isLogin ? '/api/login' : '/api/signup';
     
     try {
-      const res = await axios.post(`https://4zxl3477-5000.inc1.devtunnels.ms${endpoint}`, formData);
+      const res = await axios.post(`http://localhost:5000${endpoint}`, formData);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');

@@ -5,7 +5,7 @@ async function setup() {
         const pool = mysql.createPool({
             host: "localhost",
             user: "root",
-            password: "YOUR_DB_PASSWORD",
+            password: "root",
             database: "secondlife_resume"
         });
 
@@ -15,6 +15,7 @@ async function setup() {
                 user_id INT NOT NULL,
                 name VARCHAR(255) NOT NULL,
                 theme VARCHAR(50) DEFAULT 'Developer',
+                data JSON NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

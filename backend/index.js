@@ -258,7 +258,7 @@ app.post('/api/extract-resume', authenticateToken, upload.single('resume'), asyn
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash-lite" });
-        const prompt = "Extract the following information from the resume text below and return it strictly as a JSON object matching this structure:\n{\n  \"intro\": { \"name\": \"\", \"title\": \"\", \"summary\": \"\" },\n  \"experience\": [ { \"id\": 1, \"role\": \"\", \"company\": \"\", \"years\": \"\", \"desc\": \"\" } ],\n  \"education\": [ { \"id\": 1, \"degree\": \"\", \"school\": \"\", \"years\": \"\", \"desc\": \"\" } ],\n  \"skills\": [ \"Skill 1\", \"Skill 2\" ],\n  \"projects\": [ { \"id\": 1, \"title\": \"\", \"desc\": \"\", \"tech\": [\"Tech 1\"] } ],\n  \"certifications\": [ { \"id\": 1, \"title\": \"\", \"issuer\": \"\", \"year\": \"\" } ],\n  \"contact\": { \"email\": \"\", \"linkedin\": \"\", \"github\": \"\" },\n  \"visible\": {\n    \"education\": true,\n    \"skills\": true,\n    \"experience\": true,\n    \"projects\": true,\n    \"certifications\": true\n  }\n}\n\nRules:\n- For the \"visible\" object, set the value to false ONLY IF the section is empty or missing in the resume. Otherwise, set it to true.\n- Extract as accurately as possible. If something is missing, leave it as an empty string or empty array.\n- DO NOT wrap the output in markdown code blocks like ```json. Return ONLY the raw JSON string.\n\nResume Text:\n" + text;
+        const prompt = "Extract the following information from the resume text below and return it strictly as a JSON object matching this structure:\n{\n  \"intro\": { \"name\": \"\", \"title\": \"\", \"summary\": \"\" },\n  \"experience\": [ { \"id\": 1, \"role\": \"\", \"company\": \"\", \"years\": \"\", \"desc\": \"\" } ],\n  \"education\": [ { \"id\": 1, \"degree\": \"\", \"school\": \"\", \"years\": \"\", \"desc\": \"\" } ],\n  \"skills\": [ \"Skill 1\", \"Skill 2\" ],\n  \"projects\": [ { \"id\": 1, \"title\": \"\", \"desc\": \"\", \"tech\": [\"Tech 1\"] } ],\n  \"certifications\": [ { \"id\": 1, \"title\": \"\", \"issuer\": \"\", \"year\": \"\" } ],\n  \"contact\": { \"email\": \"\", \"linkedin\": \"\", \"github\": \"\" },\n  \"visible\": {\n    \"education\": true,\n    \"skills\": true,\n    \"experience\": true,\n    \"projects\": true,\n    \"certifications\": true\n  }\n}\n\nRules:\n- For the \"visible\" object, set the value to false ONLY IF the section is empty or missing in the resume. Otherwise, set it to true.\n- Extract as accurately as possible. If something is missing, leave it as an empty string or empty array.\n- EXTREMELY IMPORTANT: Do NOT extract personal or academic projects into the \"experience\" array. The \"experience\" array is strictly for formal employment or work experience. Projects belong ONLY in the \"projects\" array.\n- DO NOT wrap the output in markdown code blocks like ```json. Return ONLY the raw JSON string.\n\nResume Text:\n" + text;
         
         const result = await model.generateContent(prompt);
         const responseText = result.response.text().trim();
@@ -391,6 +391,192 @@ app.post('/api/deploy', authenticateToken, async (req, res) => {
         res.status(500).json({ error: "Failed to deploy to Netlify" });
     }
 });
+
+// ── ATS Resume Optimization ──────────────────────────────────────────
+const geminiSystemInstruction = `You are an elite Technical Recruiter, ATS (Applicant Tracking System) Optimizer, and Resume Writer. 
+Your objective is to take a user's raw experience data and a target job description, and output a highly optimized, tailored resume in strict JSON format.
+
+INPUT DATA:
+The user will provide:
+1. Candidate Profile: (Raw text, dictated voice transcript, or extracted PDF data)
+2. Target Context: (Target Job Title, Company Name, and raw Job Description)
+
+INSTRUCTIONS:
+1. Data Extraction & Mapping: Map the user's raw data to the required JSON schema. EXTREMELY IMPORTANT: DO NOT treat personal or academic projects as work experience. Work experience must ONLY be extracted from explicit "Experience" or "Employment" sections. Projects belong in the "projects" section ONLY.
+2. Job Tailoring: Rewrite the user's "Experience" and "Projects" descriptions to heavily align with the Target Context. Use the STAR method (Situation, Task, Action, Result). Quantify achievements where possible. 
+3. Keyword Injection: Naturally weave in relevant keywords from the Job Description into the summary, skills, and experience sections. DO NOT lie or invent experience they do not have.
+4. ATS Scoring Logic: Calculate an ATS compatibility score (integer from 0 to 100) based on a strict deterministic logic, NOT random estimation. Use this rubric:
+   - Keyword Match (0-30 points): How many required skills from the job description are explicitly present?
+   - Experience Match (0-40 points): Does the duration and relevance of actual work experience (excluding projects) align with the target role? If no formal experience exists, max score here is 15/40 (from relevant projects).
+   - Education/Certifications (0-20 points): Does the candidate meet the educational requirements?
+   - Readability & Impact (0-10 points): Formatting, action verbs, and quantifiable metrics.
+   Sum these up for the final score.
+5. Feedback: Identify matching keywords, missing keywords (skills they need to add if they have them), and provide 2-3 brief, actionable suggestions to improve the resume match.
+
+OUTPUT FORMAT:
+You must respond with ONLY valid JSON. No markdown formatting, no code blocks, no preamble, and no postscript.
+
+SCHEMA TO STRICTLY FOLLOW:
+{
+  "optimized_profile": {
+    "professional_intro": {
+      "full_name": "string",
+      "professional_title": "string",
+      "summary": "string (3-4 impactful sentences, tailored to target role)"
+    },
+    "experience": [
+      {
+        "company": "string",
+        "role": "string",
+        "duration": "string",
+        "description": "string (Action-oriented, STAR method, tailored bullet points)"
+      }
+    ],
+    "education": [
+      {
+        "institution": "string",
+        "degree": "string",
+        "year": "string"
+      }
+    ],
+    "skills": ["string", "string"],
+    "projects": [
+      {
+        "name": "string",
+        "description": "string (STAR method, tailored)",
+        "technologies": ["string"]
+      }
+    ],
+    "certifications": ["string"],
+    "contact_info": {
+      "email": "string",
+      "linkedin_url": "string",
+      "github_url": "string"
+    }
+  },
+  "ats_analysis": {
+    "score": "number (integer 0-100)",
+    "matching_keywords": ["string"],
+    "missing_keywords": ["string"],
+    "suggestions": ["string", "string"]
+  }
+}`;
+
+app.post('/api/optimize-resume', authenticateToken, async (req, res) => {
+    const { candidateData, targetPosition, companyName, jobDescription } = req.body;
+
+    if (!candidateData || !jobDescription) {
+        return res.status(400).json({ error: "Candidate data and job description are required" });
+    }
+
+    try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-3.1-flash-lite",
+            systemInstruction: geminiSystemInstruction,
+            generationConfig: {
+                responseMimeType: "application/json"
+            }
+        });
+
+        const userMessage = `
+CANDIDATE PROFILE:
+${typeof candidateData === 'string' ? candidateData : JSON.stringify(candidateData, null, 2)}
+
+TARGET CONTEXT:
+- Target Position: ${targetPosition || 'Not specified'}
+- Company Name: ${companyName || 'Not specified'}
+- Job Description:
+${jobDescription}
+`;
+
+        const result = await model.generateContent(userMessage);
+        const responseText = result.response.text().trim();
+        
+        let jsonStr = responseText;
+        if (jsonStr.startsWith('```json')) {
+            jsonStr = jsonStr.replace(/^```json\n/, '').replace(/\n```$/, '');
+        } else if (jsonStr.startsWith('```')) {
+            jsonStr = jsonStr.replace(/^```\n/, '').replace(/\n```$/, '');
+        }
+
+        const parsed = JSON.parse(jsonStr);
+
+        const profile = parsed.optimized_profile || {};
+        const intro = profile.professional_intro || {};
+        const atsAnalysis = parsed.ats_analysis || {};
+
+        // Map Gemini output → editor DEFAULT_DATA schema
+        const editorData = {
+            intro: {
+                name: intro.full_name || '',
+                title: intro.professional_title || '',
+                summary: intro.summary || ''
+            },
+            experience: (profile.experience || []).map((exp, i) => ({
+                id: i + 1,
+                role: exp.role || '',
+                company: exp.company || '',
+                years: exp.duration || '',
+                desc: exp.description || ''
+            })),
+            education: (profile.education || []).map((edu, i) => ({
+                id: i + 1,
+                degree: edu.degree || '',
+                school: edu.institution || '',
+                years: edu.year || ''
+            })),
+            skills: profile.skills || [],
+            projects: (profile.projects || []).map((proj, i) => ({
+                id: i + 1,
+                title: proj.name || '',
+                desc: proj.description || '',
+                tech: proj.technologies || []
+            })),
+            certifications: (profile.certifications || []).map((cert, i) => {
+                if (typeof cert === 'string') {
+                    return { id: i + 1, title: cert, issuer: '', year: '' };
+                }
+                return { id: i + 1, title: cert.title || '', issuer: cert.issuer || '', year: cert.year || '' };
+            }),
+            contact: {
+                email: profile.contact_info?.email || '',
+                linkedin: profile.contact_info?.linkedin_url || '',
+                github: profile.contact_info?.github_url || ''
+            },
+            visible: {
+                education: true,
+                skills: true,
+                experience: true,
+                projects: true,
+                certifications: true
+            }
+        };
+
+        res.json({
+            editorData,
+            atsAnalysis: {
+                score: atsAnalysis.score || 0,
+                matching_keywords: atsAnalysis.matching_keywords || [],
+                missing_keywords: atsAnalysis.missing_keywords || [],
+                suggestions: atsAnalysis.suggestions || []
+            }
+        });
+    } catch (err) {
+        console.error("ATS optimization error:", err);
+        res.status(500).json({ error: "Failed to optimize resume. Please try again." });
+    }
+});
+
+const setupSkillGapAnalysisRoute = require('./skillGapAnalysis');
+setupSkillGapAnalysisRoute(app, authenticateToken);
+
+const setupChatbotRoute = require('./chatbot');
+setupChatbotRoute(app);
+
+const setupCourseRecommendationsRoute = require('./courseRecommendations');
+setupCourseRecommendationsRoute(app, authenticateToken, pool);
+
 
 const PORT = 5000;
 server.listen(PORT, () => {

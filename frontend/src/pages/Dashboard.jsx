@@ -194,12 +194,20 @@ export default function Dashboard() {
             <h2 className="text-3xl font-bold font-geist text-gray-900 mb-2">My Portfolios</h2>
             <p className="text-gray-500">Manage, edit, and share your generated web portfolios.</p>
           </div>
-          <button 
-            onClick={() => setShowNewModal(true)}
-            className="flex items-center gap-2 bg-[var(--color-primary)] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[var(--color-secondary)] transition shadow-sm"
-          >
-            <Plus className="w-5 h-5" /> Create New
-          </button>
+          <div className="flex gap-4">
+            <Link 
+              to="/create-resume" 
+              className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition shadow-sm"
+            >
+              <Plus className="w-5 h-5" /> ATS Optimizer
+            </Link>
+            <button 
+              onClick={() => setShowNewModal(true)}
+              className="flex items-center gap-2 bg-[var(--color-primary)] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[var(--color-secondary)] transition shadow-sm"
+            >
+              <Plus className="w-5 h-5" /> Create New
+            </button>
+          </div>
         </div>
 
         {portfolios.length === 0 ? (
