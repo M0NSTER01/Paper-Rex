@@ -59,7 +59,7 @@ export default function Editor() {
     if (!portfolioId || loading || !data.intro?.name?.trim()) return;
     const timeoutId = setTimeout(() => {
        const token = localStorage.getItem('token');
-       axios.put(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`, 
+       axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/portfolios/${portfolioId}`, 
           { theme, data },
           { headers: { Authorization: `Bearer ${token}` } }
        ).catch(err => console.error('Autosave failed', err));
@@ -70,7 +70,7 @@ export default function Editor() {
   const fetchPortfolio = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${id}`, {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/portfolios/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.theme) setTheme(res.data.theme);
@@ -94,7 +94,7 @@ export default function Editor() {
     formData.append('photo', file);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/upload-image', formData, {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/upload-image`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -131,7 +131,7 @@ export default function Editor() {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`, 
+      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/portfolios/${portfolioId}`, 
         { theme, data },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -164,7 +164,7 @@ export default function Editor() {
     setEvaluatingAts(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/evaluate-ats', { data }, {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/evaluate-ats`, { data }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setData(prev => ({
@@ -328,7 +328,7 @@ export default function Editor() {
           const message = contactForm.querySelector('#message').value;
 
           try {
-            const res = await fetch('https://4zxl3477-5000.inc1.devtunnels.ms/api/contact', {
+            const res = await fetch(backendUrl + '/api/contact', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ name, email, message, toEmail })
@@ -360,7 +360,7 @@ export default function Editor() {
       const token = localStorage.getItem('token');
       const slug = (data.intro?.name || 'user').replace(/\s+/g, '-').toLowerCase() + '-' + Math.floor(Math.random() * 1000);
 
-      const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/deploy', {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/deploy`, {
         htmlContent,
         slug
       }, {
@@ -378,7 +378,7 @@ export default function Editor() {
       
       // Save to DB so Dashboard can show it
       if (portfolioId) {
-        await axios.put(`https://4zxl3477-5000.inc1.devtunnels.ms/api/portfolios/${portfolioId}`, 
+        await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/portfolios/${portfolioId}`, 
           { theme, data: updatedData },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -629,7 +629,7 @@ export default function Editor() {
                             formData.append('photo', file);
                             try {
                               const token = localStorage.getItem('token');
-                              const res = await axios.post('https://4zxl3477-5000.inc1.devtunnels.ms/api/upload-image', formData, {
+                              const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/upload-image`, formData, {
                                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
                               });
                               const arr = [...data.projects];
