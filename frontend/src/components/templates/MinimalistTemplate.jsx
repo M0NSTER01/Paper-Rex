@@ -101,20 +101,31 @@ export default function MinimalistTemplate({ data }) {
                             <p className="text-on-surface-variant font-light mt-6 max-w-2xl mx-auto">A comprehensive overview of my technical toolkit, ranging from frontend interfaces to backend infrastructure.</p>
                         </div>
                         {(() => {
-                            const groups = [
-                                { title: 'Core Skills', icon: 'star', skills: [] },
-                                { title: 'Technologies', icon: 'devices', skills: [] },
-                                { title: 'Tools & Platforms', icon: 'build', skills: [] }
-                            ];
+                            let groups = [];
                             
-                            if (data?.skills?.length) {
-                                data.skills.forEach((skill, idx) => {
-                                    groups[idx % 3].skills.push(skill);
-                                });
+                            if (data?.categorizedSkills && data.categorizedSkills.length > 0) {
+                                const icons = ['star', 'devices', 'dns', 'build', 'cloud'];
+                                groups = data.categorizedSkills.map((cat, idx) => ({
+                                    title: cat.category,
+                                    icon: icons[idx % icons.length],
+                                    skills: cat.items || []
+                                }));
                             } else {
-                                groups[0].skills = ['React', 'JavaScript', 'HTML/CSS'];
-                                groups[1].skills = ['Node.js', 'Python', 'SQL'];
-                                groups[2].skills = ['Git', 'Docker', 'AWS'];
+                                groups = [
+                                    { title: 'Core Skills', icon: 'star', skills: [] },
+                                    { title: 'Technologies', icon: 'devices', skills: [] },
+                                    { title: 'Tools & Platforms', icon: 'build', skills: [] }
+                                ];
+                                
+                                if (data?.skills?.length) {
+                                    data.skills.forEach((skill, idx) => {
+                                        groups[idx % 3].skills.push(skill);
+                                    });
+                                } else {
+                                    groups[0].skills = ['React', 'JavaScript', 'HTML/CSS'];
+                                    groups[1].skills = ['Node.js', 'Python', 'SQL'];
+                                    groups[2].skills = ['Git', 'Docker', 'AWS'];
+                                }
                             }
 
                             return (
