@@ -101,6 +101,29 @@ export default function Editor() {
     reader.readAsDataURL(file);
   };
 
+  const [isEnhancing, setIsEnhancing] = useState(false);
+
+  const handleEnhanceSummary = async () => {
+    try {
+      setIsEnhancing(true);
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/enhance-summary`, { data }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.data.enhancedSummary) {
+        setData(prev => ({
+          ...prev,
+          intro: { ...prev.intro, summary: res.data.enhancedSummary }
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to enhance summary');
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
   const calculateCompletion = () => {
     let completed = 0;
     let total = 6;
@@ -520,7 +543,13 @@ export default function Editor() {
                   <input type="text" value={data.intro?.title || ''} onChange={(e) => setData({...data, intro: {...data.intro, title: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-[var(--color-primary)] outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Summary</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-semibold text-gray-500">Summary</label>
+                    <button onClick={handleEnhanceSummary} disabled={isEnhancing} className="text-xs text-[var(--color-primary)] font-semibold flex items-center gap-1 hover:underline disabled:opacity-50">
+                      {isEnhancing ? <Loader2 className="w-3 h-3 animate-spin" /> : <span className="material-symbols-outlined text-[14px]">auto_awesome</span>}
+                      {isEnhancing ? 'Enhancing...' : 'AI Enhance'}
+                    </button>
+                  </div>
                   <textarea rows="4" value={data.intro?.summary || ''} onChange={(e) => setData({...data, intro: {...data.intro, summary: e.target.value}})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-none focus:border-[var(--color-primary)] outline-none"></textarea>
                 </div>
               </div>

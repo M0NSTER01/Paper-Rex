@@ -154,23 +154,32 @@ export default function MidnightDeveloperTemplate({ data }) {
                                     1<br/>2<br/>3<br/>4<br/>5<br/>6
                                 </div>
                                 <div className="text-slate-300">
-                                    <span className="text-rose-400">const</span> tech_stack = {'{'}<br/>
-                                    &nbsp;&nbsp;<span className="text-blue-400">skills</span>: [
-                                    {data?.skills?.length > 0 ? (
-                                        data.skills.map((skill, idx) => (
-                                            <React.Fragment key={idx}>
-                                                <span className="text-green-400">'{skill}'</span>
-                                                {idx < data.skills.length - 1 ? ', ' : ''}
-                                            </React.Fragment>
-                                        ))
-                                    ) : (
-                                        <><span className="text-green-400">'JavaScript'</span>, <span className="text-green-400">'TypeScript'</span>, <span className="text-green-400">'Python'</span></>
-                                    )}
-                                    ],<br/>
-                                    &nbsp;&nbsp;<span className="text-blue-400">frontend</span>: [<span className="text-green-400">'React'</span>, <span className="text-green-400">'Next.js'</span>, <span className="text-green-400">'Tailwind CSS'</span>],<br/>
-                                    &nbsp;&nbsp;<span className="text-blue-400">backend</span>: [<span className="text-green-400">'Node.js'</span>, <span className="text-green-400">'Express'</span>, <span className="text-green-400">'PostgreSQL'</span>, <span className="text-green-400">'Redis'</span>],<br/>
-                                    &nbsp;&nbsp;<span className="text-blue-400">infrastructure</span>: [<span className="text-green-400">'Docker'</span>, <span className="text-green-400">'Kubernetes'</span>, <span className="text-green-400">'AWS'</span>, <span className="text-green-400">'Terraform'</span>]<br/>
-                                    {'};'}
+                                    {(() => {
+                                      const skills = data?.skills || ['JavaScript', 'TypeScript', 'Python', 'React', 'Next.js', 'Tailwind CSS', 'Node.js', 'Express', 'PostgreSQL', 'Redis', 'Docker', 'AWS'];
+                                      const chunkSize = Math.ceil(skills.length / 4) || 1;
+                                      const core = skills.slice(0, chunkSize);
+                                      const frontend = skills.slice(chunkSize, chunkSize * 2);
+                                      const backend = skills.slice(chunkSize * 2, chunkSize * 3);
+                                      const tools = skills.slice(chunkSize * 3);
+                                      
+                                      const renderArray = (arr) => arr.map((item, i) => (
+                                          <React.Fragment key={i}>
+                                              <span className="text-green-400">'{item}'</span>
+                                              {i < arr.length - 1 ? ', ' : ''}
+                                          </React.Fragment>
+                                      ));
+
+                                      return (
+                                          <>
+                                              <span className="text-rose-400">const</span> tech_stack = {'{'}<br/>
+                                              {core.length > 0 && <>&nbsp;&nbsp;<span className="text-blue-400">core</span>: [{renderArray(core)}],<br/></>}
+                                              {frontend.length > 0 && <>&nbsp;&nbsp;<span className="text-blue-400">frontend</span>: [{renderArray(frontend)}],<br/></>}
+                                              {backend.length > 0 && <>&nbsp;&nbsp;<span className="text-blue-400">backend</span>: [{renderArray(backend)}],<br/></>}
+                                              {tools.length > 0 && <>&nbsp;&nbsp;<span className="text-blue-400">tools</span>: [{renderArray(tools)}]<br/></>}
+                                              {'};'}
+                                          </>
+                                      );
+                                  })()}
                                 </div>
                             </div>
                         </div>
