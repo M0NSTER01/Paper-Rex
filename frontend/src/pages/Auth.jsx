@@ -107,6 +107,7 @@ export default function Auth() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
+                autoComplete={isLogin ? "current-password" : "new-password"}
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]"
                 placeholder="••••••••"
                 required

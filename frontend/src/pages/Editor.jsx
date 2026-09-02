@@ -90,24 +90,15 @@ export default function Editor() {
   const handlePhotoUpload = async (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append('photo', file);
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/upload-image`, formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
       setData(prev => ({
         ...prev,
-        intro: { ...prev.intro, photoUrl: res.data.photoUrl }
+        intro: { ...prev.intro, photoUrl: reader.result }
       }));
-    } catch (err) {
-      console.error('Failed to upload photo', err);
-      alert('Failed to upload profile photo');
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
   const calculateCompletion = () => {
@@ -625,19 +616,13 @@ export default function Editor() {
                           <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                             if (!e.target.files || e.target.files.length === 0) return;
                             const file = e.target.files[0];
-                            const formData = new FormData();
-                            formData.append('photo', file);
-                            try {
-                              const token = localStorage.getItem('token');
-                              const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/upload-image`, formData, {
-                                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-                              });
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
                               const arr = [...data.projects];
-                              arr[idx].image = res.data.photoUrl;
+                              arr[idx].image = reader.result;
                               setData({...data, projects: arr});
-                            } catch (err) {
-                              alert('Failed to upload project photo');
-                            }
+                            };
+                            reader.readAsDataURL(file);
                           }} />
                         </label>
                       )}
