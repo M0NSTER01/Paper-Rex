@@ -31,13 +31,13 @@ export default function ModernTechTemplate({ data }) {
               {data?.contact?.linkedin && (
                 <div className="flex items-start gap-1.5">
                   <span className="opacity-60 shrink-0">in</span>
-                  <span className="break-all">{data.contact.linkedin}</span>
+                  <a href={data.contact.linkedin.startsWith("http") ? data.contact.linkedin : "https://" + data.contact.linkedin} target="_blank" rel="noopener noreferrer" className="break-all hover:text-white hover:underline transition-colors">{data.contact.linkedin.replace(/^https?:\/\/(www\.)?/, "")}</a>
                 </div>
               )}
               {data?.contact?.github && (
                 <div className="flex items-start gap-1.5">
                   <span className="opacity-60 shrink-0">⌨</span>
-                  <span className="break-all">{data.contact.github}</span>
+                  <a href={data.contact.github.startsWith("http") ? data.contact.github : "https://" + data.contact.github} target="_blank" rel="noopener noreferrer" className="break-all hover:text-white hover:underline transition-colors">{data.contact.github.replace(/^https?:\/\/(www\.)?/, "")}</a>
                 </div>
               )}
             </div>

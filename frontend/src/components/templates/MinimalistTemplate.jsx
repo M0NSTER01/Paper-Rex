@@ -46,8 +46,8 @@ export default function MinimalistTemplate({ data }) {
                         </p>
                     </div>
                     <div className="flex gap-6 pt-8 border-t border-surface-variant w-32 justify-center">
-                        <a className="text-on-surface hover:text-primary transition-colors" href="#"><span className="material-symbols-outlined text-2xl">link</span></a>
-                        <a className="text-on-surface hover:text-primary transition-colors" href="#"><span className="material-symbols-outlined text-2xl">code</span></a>
+                        <a className="text-on-surface hover:text-primary transition-colors" href={data?.contact?.linkedin || "#"} target="_blank" rel="noopener noreferrer"><span className="material-symbols-outlined text-2xl">link</span></a>
+                        <a className="text-on-surface hover:text-primary transition-colors" href={data?.contact?.github || "#"} target="_blank" rel="noopener noreferrer"><span className="material-symbols-outlined text-2xl">code</span></a>
                         <a className="text-on-surface hover:text-primary transition-colors" href="#contact"><span className="material-symbols-outlined text-2xl">mail</span></a>
                     </div>
                 </section>

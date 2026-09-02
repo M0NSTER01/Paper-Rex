@@ -18,13 +18,13 @@ export default function ATSClassicTemplate({ data }) {
           {data?.contact?.linkedin && (
             <>
               <span className="text-gray-400">|</span>
-              <span>{data.contact.linkedin}</span>
+              <a href={data.contact.linkedin.startsWith("http") ? data.contact.linkedin : "https://" + data.contact.linkedin} target="_blank" rel="noopener noreferrer" className="hover:underline">{data.contact.linkedin.replace(/^https?:\/\/(www\.)?/, "")}</a>
             </>
           )}
           {data?.contact?.github && (
             <>
               <span className="text-gray-400">|</span>
-              <span>{data.contact.github}</span>
+              <a href={data.contact.github.startsWith("http") ? data.contact.github : "https://" + data.contact.github} target="_blank" rel="noopener noreferrer" className="hover:underline">{data.contact.github.replace(/^https?:\/\/(www\.)?/, "")}</a>
             </>
           )}
         </div>
