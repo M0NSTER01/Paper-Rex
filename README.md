@@ -1,8 +1,8 @@
-# 🚀 Khalsa - AI-Powered Portfolio Builder
+# 🚀 Paper Rex - AI-Powered Portfolio Builder
 
-![Khalsa Portfolio Builder](https://paper-rex.netlify.app/favicon.ico) <!-- Replace with actual banner if available -->
+![Paper Rex Portfolio Builder](https://paper-rex.netlify.app/favicon.ico) <!-- Replace with actual banner if available -->
 
-Welcome to **Khalsa**, a next-generation AI-powered portfolio builder. Khalsa allows users to upload their resume, automatically extract and intelligently categorize their professional data using Google's Gemini AI, and instantly deploy stunning, interactive web portfolios.
+Welcome to **Paper Rex**, a next-generation AI-powered portfolio builder. Paper Rex allows users to upload their resume, automatically extract and intelligently categorize their professional data using Google's Gemini AI, and instantly deploy stunning, interactive web portfolios.
 
 **🔗 Live Demo:** [https://paper-rex.netlify.app/](https://paper-rex.netlify.app/)
 
@@ -54,8 +54,8 @@ Welcome to **Khalsa**, a next-generation AI-powered portfolio builder. Khalsa al
 
 ### 2. Clone the Repository
 \`\`\`bash
-git clone https://github.com/your-username/khalsa.git
-cd khalsa
+git clone https://github.com/M0NSTER01/Paper-Rex.git
+cd Paper-Rex
 \`\`\`
 
 ### 3. Environment Variables
@@ -64,10 +64,10 @@ You will need to set up environment variables for both the frontend and backend.
 2. Create \`backend/.env\`
 
 ### 4. Database Setup
-1. Create a MySQL database (e.g., \`khalsa_db\`).
+1. Create a MySQL database (e.g., \`paper_rex_db\`).
 2. Run the initial schema. If you have the provided \`Dump*.sql\` file, import it:
    \`\`\`bash
-   mysql -u root -p khalsa_db < Dump20260830.sql
+   mysql -u root -p paper_rex_db < Dump20260830.sql
    \`\`\`
 
 ### 5. Install Dependencies & Run
@@ -96,7 +96,7 @@ npm run dev
 1. Install the Vercel CLI or connect your GitHub repo to the Vercel dashboard.
 2. Set the build command to `npm install` and output directory to `./` (or leave default for Node.js).
 3. Add all the backend environment variables (`DB_URI`, `JWT_SECRET`, `GEMINI_API_KEY`, etc.) in the Vercel dashboard.
-4. Deploy! Note your Vercel URL (e.g., `https://khalsa-api.vercel.app`).
+4. Deploy! Note your Vercel URL (e.g., `https://paper-rex-api.vercel.app`).
 
 ### Deploying the Frontend to Netlify
 1. Connect your GitHub repo to Netlify.
