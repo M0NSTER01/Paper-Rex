@@ -100,46 +100,45 @@ export default function MinimalistTemplate({ data }) {
                             <div className="w-12 h-1 bg-primary mx-auto mt-6"></div>
                             <p className="text-on-surface-variant font-light mt-6 max-w-2xl mx-auto">A comprehensive overview of my technical toolkit, ranging from frontend interfaces to backend infrastructure.</p>
                         </div>
-                        <div className="grid md:grid-cols-3 gap-8">
-                            <div className="bg-surface p-6 rounded-2xl border border-surface-variant">
-                                <h4 className="font-serif font-bold text-lg text-on-surface mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-primary">devices</span> Frontend</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">HTML5</span>
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">CSS3</span>
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">JavaScript</span>
-                                    {data?.skills?.slice(0, 3).map(s => <span key={s} className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">{s}</span>)}
-                                    {!data?.skills && (
-                                        <>
-                                            <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">React</span>
-                                            <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">TypeScript</span>
-                                            <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">Tailwind CSS</span>
-                                        </>
-                                    )}
+                        {(() => {
+                            const groups = [
+                                { title: 'Core Skills', icon: 'star', skills: [] },
+                                { title: 'Technologies', icon: 'devices', skills: [] },
+                                { title: 'Tools & Platforms', icon: 'build', skills: [] }
+                            ];
+                            
+                            if (data?.skills?.length) {
+                                data.skills.forEach((skill, idx) => {
+                                    groups[idx % 3].skills.push(skill);
+                                });
+                            } else {
+                                groups[0].skills = ['React', 'JavaScript', 'HTML/CSS'];
+                                groups[1].skills = ['Node.js', 'Python', 'SQL'];
+                                groups[2].skills = ['Git', 'Docker', 'AWS'];
+                            }
+
+                            return (
+                                <div className="grid md:grid-cols-3 gap-8">
+                                    {groups.map((group, idx) => group.skills.length > 0 && (
+                                        <div key={idx} className="bg-surface p-6 rounded-2xl border border-surface-variant">
+                                            <h4 className="font-serif font-bold text-lg text-on-surface mb-4 flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-primary">{group.icon}</span> 
+                                                {group.title}
+                                            </h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {group.skills.map((s, sIdx) => (
+                                                    <span key={sIdx} className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">
+                                                        {s}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
-                            <div className="bg-surface p-6 rounded-2xl border border-surface-variant">
-                                <h4 className="font-serif font-bold text-lg text-on-surface mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-primary">dns</span> Backend</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">Node.js</span>
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">Python</span>
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">PostgreSQL</span>
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">GraphQL</span>
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">Redis</span>
-                                </div>
-                            </div>
-                            <div className="bg-surface p-6 rounded-2xl border border-surface-variant">
-                                <h4 className="font-serif font-bold text-lg text-on-surface mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-primary">cloud</span> Infrastructure &amp; Tools</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">AWS</span>
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">Docker</span>
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">Kubernetes</span>
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">Git</span>
-                                    <span className="px-3 py-1.5 rounded-md bg-surface-container-high text-on-surface text-sm font-medium">CI/CD</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                            );
+                        })()}
+                      </div>
+                  </section>
 )}
                 
                 {/* 4. Work Experience Timeline */}
